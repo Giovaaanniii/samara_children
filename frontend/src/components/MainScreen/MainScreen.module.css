@@ -1,0 +1,80 @@
+.main_wpapper {
+  display: flex;
+  gap: 16px;
+  margin: 46px 120px 74px 120px;
+  flex-direction: row;
+  justify-content: space-between;
+
+}
+.info_wrapper{
+  width: 600px;
+}
+.text_wpapper {
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+}
+.h_text{
+  font-size: 48px;
+  font-weight:bold;
+}
+.p_text{
+  font-size: 18px;
+  font-weight: lighter;
+  line-height:28px;
+}
+.ladya_wrapper{
+  display: flex;
+    width: 590px;
+    justify-content: center;
+}
+.ladya_image {
+ width: 590px;
+  height: 371px;
+}
+.buttons_wrapper{
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px
+}
+.format_buttons{
+  display: flex;
+  gap: 4px;
+}
+.offline_button, .online_button{
+  width: 194px;
+  height: 100px;
+  border: none;
+  background-color: aliceblue;
+  border-radius: 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.offline_button:focus  {
+  background-color: white;
+  border: 2px solid red;
+  color: red;
+}
+.online_button:focus  {
+  background-color: white;
+  border: 2px solid red;
+  color: red;
+}
+
+.sign_up{
+  background-color: red;
+  color: white;
+  border: none;
+  height: 60px;
+  font-size: 18px;
+  width: 392px;
+  border-radius: 28px;
+}
+
+.sign_up:hover{
+  background-color: white;
+  border: 2px solid red;
+  color: red;
+  cursor: pointer;
+}
