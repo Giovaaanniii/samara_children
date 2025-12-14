@@ -1,7 +1,7 @@
 .main_wpapper {
   display: flex;
   gap: 16px;
-  margin: 46px 120px 74px 120px;
+  margin: 46px 120px 140px;
   flex-direction: row;
   justify-content: space-between;
 
