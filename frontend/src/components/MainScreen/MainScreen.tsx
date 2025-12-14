@@ -30,9 +30,9 @@ function MainScreen() {
               className={s.offline_button}
               onClick={handleClickOffline}
               style={{
-                background: activeButton === "offline" ? "white" : "aliceblue",
+                background: activeButton === "offline" ? "#ff000016" : "aliceblue",
                 border: activeButton === "offline" ? "2px solid red" : "none",
-                color: activeButton === "offline" ? "red" : "black",
+                color: activeButton === "offline" ? "#ff0000" : "black",
               }}
             >
               лично
@@ -40,9 +40,9 @@ function MainScreen() {
             <button
               className={s.online_button}
               style={{
-                background: activeButton === "online" ? "white" : "aliceblue",
+                background: activeButton === "online" ? " #ff000016" : "aliceblue",
                 border: activeButton === "online" ? "2px solid red" : "none",
-                color: activeButton === "online" ? "red" : "black",
+                color: activeButton === "online" ? "#ff0000" : "black",
               }}
               onClick={handleClickOnline}
             >
