@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from routers import api_router
+from routers.auth import router as auth_router
 
 app = FastAPI(
     title="Самара Детям API",
@@ -36,3 +37,4 @@ async def request_context_middleware(request: Request, call_next):
 
 
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")

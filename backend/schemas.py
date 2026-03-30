@@ -46,5 +46,10 @@ class Token(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    login: str = Field(..., min_length=1, max_length=255)
+    login: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Логин или email",
+    )
     password: str = Field(..., min_length=1, max_length=128)
