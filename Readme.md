@@ -25,6 +25,23 @@
 2. Откройте `.env` и задайте как минимум `SECRET_KEY`; при локальном запуске — корректные `DATABASE_URL` и `REDIS_URL` под ваши службы.
 3. Файл `.env` не коммитится; подробности полей — в `.env.example`.
 
+## Миграции базы данных (Alembic)
+
+Конфигурация: `alembic.ini`, скрипты — в каталоге `alembic/`, ревизии — в `alembic/versions/`. Переменная `DATABASE_URL` в `.env` должна указывать на ту же БД, что и у приложения (для async — `postgresql+asyncpg://...`).
+
+Из **корня репозитория** (где лежит `alembic.ini`), с активированным venv и установленными зависимостями из `requirements.txt`:
+
+```bash
+alembic upgrade head
+```
+
+Создать новую миграцию по изменениям моделей:
+
+```bash
+alembic revision --autogenerate -m "описание"
+alembic upgrade head
+```
+
 ## Запуск
 
 ### Вариант 1: Docker Compose (рекомендуется для разработки)
