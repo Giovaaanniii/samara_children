@@ -24,6 +24,21 @@
 
 4. Документация OpenAPI: [http://localhost:8000/docs](http://localhost:8000/docs)
 
+## Docker Compose (разработка)
+
+В корне `samara/`:
+
+```bash
+cp .env.example .env
+# Укажите как минимум SECRET_KEY в .env
+docker compose up --build
+```
+
+- API: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Фронтенд (Vite): [http://localhost:3000](http://localhost:3000)
+
+Том `frontend_node_modules` сохраняет зависимости Node внутри контейнера; каталог `./backend` и `./frontend` смонтированы для автоперезапуска при изменении кода (`uvicorn --reload` и Vite HMR).
+
 ## Переменные окружения
 
 См. файл `.env.example` в корне проекта.
