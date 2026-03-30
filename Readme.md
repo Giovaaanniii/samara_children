@@ -1,44 +1,87 @@
-# Самара Детям — монорепозиторий
+# Самара Детям
 
-## Структура
+Информационно-сервисная платформа для экскурсионного бюро: каталог мероприятий, бронирование и администрирование контента. Репозиторий — монорепозиторий с раздельными клиентом и сервером.
 
-- `frontend/` — клиент (React/Vite).
-- `backend/` — API на FastAPI.
+## Состав репозитория
 
-## Бэкенд: быстрый старт
+| Каталог | Назначение |
+|--------|------------|
+| `frontend/` | Веб-клиент (React, Vite, TypeScript) |
+| `backend/` | REST API (FastAPI, SQLAlchemy, PostgreSQL) |
+| `requirements.txt` | Зависимости Python для бэкенда |
 
-1. Создайте виртуальное окружение Python 3.11+ и установите зависимости из корня проекта:
+После запуска API документация доступна по адресу `http://localhost:8000/docs` (Swagger UI).
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Требования
 
-2. Скопируйте `.env.example` в `.env` в **корне** репозитория (`samara/`) и заполните значения.
-
-3. Запуск из каталога `backend/`:
-
-   ```bash
-   cd backend
-   uvicorn main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-4. Документация OpenAPI: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-## Docker Compose (разработка)
-
-В корне `samara/`:
-
-```bash
-cp .env.example .env
-# Укажите как минимум SECRET_KEY в .env
-docker compose up --build
-```
-
-- API: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Фронтенд (Vite): [http://localhost:3000](http://localhost:3000)
-
-Том `frontend_node_modules` сохраняет зависимости Node внутри контейнера; каталог `./backend` и `./frontend` смонтированы для автоперезапуска при изменении кода (`uvicorn --reload` и Vite HMR).
+| Режим | Что нужно |
+|-------|-----------|
+| Docker | Docker Engine и Docker Compose Plugin |
+| Локально | Python 3.11+, Node.js 18+, отдельно запущенные PostgreSQL 15+ и Redis 7+ |
 
 ## Переменные окружения
 
-См. файл `.env.example` в корне проекта.
+1. В корне репозитория скопируйте шаблон: `cp .env.example .env` (Windows: `copy .env.example .env`).
+2. Откройте `.env` и задайте как минимум `SECRET_KEY`; при локальном запуске — корректные `DATABASE_URL` и `REDIS_URL` под ваши службы.
+3. Файл `.env` не коммитится; подробности полей — в `.env.example`.
+
+## Запуск
+
+### Вариант 1: Docker Compose (рекомендуется для разработки)
+
+Все сервисы (БД, Redis, бэкенд, фронтенд) поднимаются одной командой из **корня репозитория** (каталог, где лежат `docker-compose.yml` и `requirements.txt`):
+
+```bash
+docker compose up --build
+```
+
+Первый запуск соберёт образы; при изменении кода в `./backend` и `./frontend` контейнеры перезагружаются за счёт `uvicorn --reload` и Vite.
+
+| Что открыть | URL |
+|-------------|-----|
+| Фронтенд | http://localhost:3000 |
+| API | http://localhost:8000 |
+| Swagger | http://localhost:8000/docs |
+
+Остановка: `Ctrl+C` в терминале или в другом окне: `docker compose down`.
+
+### Вариант 2: Локально (без Docker)
+
+Убедитесь, что PostgreSQL и Redis запущены и строки в `.env` указывают на них (для API обычно `localhost`).
+
+**Терминал 1 — бэкенд**
+
+```bash
+pip install -r requirements.txt
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Терминал 2 — фронтенд**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+| Что открыть | URL |
+|-------------|-----|
+| Фронтенд | http://localhost:3000 |
+| API | http://localhost:8000 |
+| Swagger | http://localhost:8000/docs |
+
+Порт фронтенда задаётся в `frontend/vite.config.ts` (по умолчанию 3000).
+
+**Сборка фронтенда для продакшена**
+
+```bash
+cd frontend
+npm run build
+```
+
+Статика окажется в `frontend/dist/`; раздачу настраивает ваш веб-сервер или отдельный образ/nginx.
+
+## Лицензия
+
+Укажите лицензию при публикации (например, добавьте файл `LICENSE` в корень репозитория).
