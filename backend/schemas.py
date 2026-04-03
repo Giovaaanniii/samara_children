@@ -179,6 +179,20 @@ class GuideResponse(BaseModel):
     is_active: bool
 
 
+class ReviewCreate(BaseModel):
+    event_id: int = Field(..., ge=1)
+    booking_id: int = Field(..., ge=1)
+    rating: int = Field(..., ge=1, le=5)
+    comment: str | None = None
+    guide_rating: int | None = Field(None, ge=1, le=5)
+
+
+class ReviewUpdate(BaseModel):
+    rating: int | None = Field(None, ge=1, le=5)
+    comment: str | None = None
+    guide_rating: int | None = Field(None, ge=1, le=5)
+
+
 class ReviewResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
