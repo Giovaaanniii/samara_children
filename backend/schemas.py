@@ -140,6 +140,45 @@ class ScheduleUpdate(BaseModel):
     guide_id: int | None = Field(None, ge=1)
 
 
+class GuideCreate(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=255)
+    last_name: str = Field(..., min_length=1, max_length=255)
+    patronymic: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=32)
+    email: str | None = Field(None, max_length=255)
+    photo_url: str | None = Field(None, max_length=1024)
+    specialization: str | None = Field(None, max_length=512)
+    hire_date: date | None = None
+    is_active: bool = True
+
+
+class GuideUpdate(BaseModel):
+    first_name: str | None = Field(None, min_length=1, max_length=255)
+    last_name: str | None = Field(None, min_length=1, max_length=255)
+    patronymic: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=32)
+    email: str | None = Field(None, max_length=255)
+    photo_url: str | None = Field(None, max_length=1024)
+    specialization: str | None = Field(None, max_length=512)
+    hire_date: date | None = None
+    is_active: bool | None = None
+
+
+class GuideResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    first_name: str
+    last_name: str
+    patronymic: str | None
+    phone: str | None
+    email: str | None
+    photo_url: str | None
+    specialization: str | None
+    hire_date: date | None
+    is_active: bool
+
+
 class ReviewResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
