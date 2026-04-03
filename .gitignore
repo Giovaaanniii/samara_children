@@ -1,7 +1,7 @@
-# Secrets and local env
+# Secrets and local env (в т.ч. .env.example — не коммитить)
 .env
 .env.*
-!.env.example
+.env.example
 
 # Python
 .venv/
