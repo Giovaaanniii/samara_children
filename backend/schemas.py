@@ -128,6 +128,19 @@ class ScheduleResponse(BaseModel):
     guide_id: int | None
 
 
+class ScheduleBookingInfoResponse(BaseModel):
+    """Сеанс + данные мероприятия для страницы бронирования (публично)."""
+
+    id: int
+    event_id: int
+    event_title: str
+    base_price: Decimal
+    start_datetime: datetime
+    end_datetime: datetime
+    available_slots: int
+    status: ScheduleStatus
+
+
 class ScheduleCreate(BaseModel):
     event_id: int = Field(..., ge=1)
     start_datetime: datetime

@@ -42,6 +42,17 @@
   text-decoration: underline;
 }
 
+.footerLogout {
+  color: rgba(255, 255, 255, 0.75) !important;
+  padding: 0 !important;
+  height: auto !important;
+  font-size: inherit;
+}
+
+.footerLogout:hover {
+  color: #fff !important;
+}
+
 .copy {
   font-size: 13px !important;
 }

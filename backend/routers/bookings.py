@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Annotated
+from urllib.parse import urlparse, urlencode, parse_qsl, urlunparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -43,6 +44,25 @@ from services.payment_service import create_payment, create_refund
 from services.redis_client import RedisDep
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
+
+
+def _payment_return_url_with_booking(booking_id: int) -> str:
+    """Добавляет booking_id к PAYMENT_RETURN_URL для страницы подтверждения на фронте."""
+    base = settings.PAYMENT_RETURN_URL.rstrip("/")
+    parts = urlparse(base)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query["booking_id"] = str(booking_id)
+    new_query = urlencode(query)
+    return urlunparse(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            parts.params,
+            new_query,
+            parts.fragment,
+        ),
+    )
 
 
 def _booking_to_response(booking: Booking) -> BookingResponse:
@@ -184,7 +204,7 @@ async def create_booking(
         booking_id=booking.id,
         amount=booking.total_price,
         description=f"Бронирование #{booking.id}, мероприятие: {event.title}",
-        return_url=settings.PAYMENT_RETURN_URL,
+        return_url=_payment_return_url_with_booking(booking.id),
     )
 
     return BookingResponse(

@@ -90,6 +90,18 @@ export interface Schedule {
   guide_id: number | null;
 }
 
+/** Публичный ответ GET /schedules/:id для страницы бронирования */
+export interface ScheduleBookingInfo {
+  id: number;
+  event_id: number;
+  event_title: string;
+  base_price: string;
+  start_datetime: string;
+  end_datetime: string;
+  available_slots: number;
+  status: ScheduleStatus;
+}
+
 export interface Review {
   id: number;
   user_id: number;

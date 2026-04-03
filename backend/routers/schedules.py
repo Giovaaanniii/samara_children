@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth import get_current_admin
 from database import get_db
 from models import Booking, Event, Guide, Schedule, User
-from schemas import ScheduleCreate, ScheduleResponse, ScheduleUpdate
+from schemas import (
+    ScheduleBookingInfoResponse,
+    ScheduleCreate,
+    ScheduleResponse,
+    ScheduleUpdate,
+)
 from services.schedule_notifications import notify_booking_users_schedule_changed
 
 router = APIRouter(prefix="/schedules", tags=["schedules"])
@@ -62,6 +67,35 @@ async def list_schedules(
         )
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+@router.get("/{schedule_id}", response_model=ScheduleBookingInfoResponse)
+async def get_schedule_for_booking(
+    schedule_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ScheduleBookingInfoResponse:
+    schedule = await db.get(Schedule, schedule_id)
+    if schedule is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Сеанс не найден",
+        )
+    event = await db.get(Event, schedule.event_id)
+    if event is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Мероприятие не найдено",
+        )
+    return ScheduleBookingInfoResponse(
+        id=schedule.id,
+        event_id=schedule.event_id,
+        event_title=event.title,
+        base_price=event.base_price,
+        start_datetime=schedule.start_datetime,
+        end_datetime=schedule.end_datetime,
+        available_slots=schedule.available_slots,
+        status=schedule.status,
+    )
 
 
 @router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)

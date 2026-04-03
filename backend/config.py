@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: str = ""
     YOOKASSA_SECRET_KEY: str = ""
     # URL возврата пользователя после оплаты (redirect)
-    PAYMENT_RETURN_URL: str = "http://localhost:3000/payment/return"
+    PAYMENT_RETURN_URL: str = "http://localhost:5173/payment/return"
     # Отмена: не позже чем за N часов до начала сеанса
     BOOKING_CANCEL_MIN_HOURS_BEFORE_EVENT: int = 24
     # Автовозврат на карту через ЮKassa при отмене оплаченного бронирования
@@ -38,8 +38,10 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     FIREBASE_CREDENTIALS_PATH: str = ""
     EMAIL_FROM: str = ""
-    # Публичный URL фронтенда (ссылки в письмах, QR)
+    # Публичный URL фронтенда (ссылки в письмах, QR, CORS)
     FRONTEND_URL: str = "http://localhost:3000"
+    # Дополнительные Origin для CORS через запятую (например http://192.168.1.5:3000)
+    CORS_EXTRA_ORIGINS: str = ""
 
     @property
     def cors_origins(self) -> list[str]:
@@ -51,6 +53,10 @@ class Settings(BaseSettings):
             "http://127.0.0.1:5173",
             frontend,
         }
+        for raw in self.CORS_EXTRA_ORIGINS.split(","):
+            o = raw.strip()
+            if o:
+                origins.add(o.rstrip("/"))
         return sorted(origins)
 
 

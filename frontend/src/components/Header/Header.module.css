@@ -95,6 +95,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.userName {
+  font-size: 14px;
+  color: #5a3a3a;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .userIcon {
@@ -113,6 +124,18 @@
 
 .loginLink:hover {
   background: rgba(184, 50, 50, 0.08);
+}
+
+.logoutBtn {
+  border-color: rgba(184, 50, 50, 0.45) !important;
+  color: #942828 !important;
+  font-weight: 600;
+}
+
+.logoutBtn:hover {
+  border-color: #b83232 !important;
+  color: #b83232 !important;
+  background: rgba(184, 50, 50, 0.06) !important;
 }
 
 @media (max-width: 640px) {

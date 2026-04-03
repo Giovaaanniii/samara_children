@@ -1,9 +1,26 @@
-import { UserOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { Button } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuthStore } from "../../store/authStore";
 
 import styles from "./Header.module.css";
 
 export default function Header() {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  const onLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
+
+  const displayName =
+    user?.first_name && user?.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : user?.first_name || user?.login || "";
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -24,22 +41,37 @@ export default function Header() {
           <Link to="/events" className={styles.navLink}>
             Мероприятия
           </Link>
-          <Link to="/excursions" className={styles.navLink}>
-            Экскурсии
-          </Link>
-          <Link to="/workshops" className={styles.navLink}>
-            Мастер-классы
-          </Link>
-          <Link to="/faq" className={styles.navLink}>
-            FAQ
-          </Link>
         </nav>
 
         <div className={styles.actions}>
           <UserOutlined className={styles.userIcon} aria-hidden />
-          <Link to="/login" className={styles.loginLink}>
-            Войти
-          </Link>
+          {user ? (
+            <>
+              <span className={styles.userName} title={user.email}>
+                {displayName}
+              </span>
+              <Link to="/profile" className={styles.loginLink}>
+                Личный кабинет
+              </Link>
+              <Button
+                type="default"
+                className={styles.logoutBtn}
+                icon={<LogoutOutlined />}
+                onClick={onLogout}
+              >
+                Выйти
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className={styles.loginLink}>
+                Регистрация
+              </Link>
+              <Link to="/login" className={styles.loginLink}>
+                Войти
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

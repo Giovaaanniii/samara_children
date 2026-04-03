@@ -23,9 +23,12 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+# allow_origin_regex — любой порт localhost (Docker :3000, Vite :5173 и т.д.);
+# при 500 без заголовков CORS браузер показывает «blocked by CORS», хотя корень — ошибка сервера.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

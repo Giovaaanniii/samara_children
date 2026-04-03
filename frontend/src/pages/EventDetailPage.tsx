@@ -180,10 +180,7 @@ export default function EventDetailPage() {
                 borderBottom: "1px solid rgba(0,0,0,.06)",
               }}
               actions={[
-                <Link
-                  key="book"
-                  to={`/events/${data.id}/booking?scheduleId=${s.id}`}
-                >
+                <Link key="book" to={`/book/${s.id}`}>
                   <Button type="primary" size="large">
                     Забронировать
                   </Button>

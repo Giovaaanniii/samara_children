@@ -2,7 +2,14 @@ import { ConfigProvider, theme } from "antd";
 import type { ThemeConfig } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import { useEffect } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 
 import "./App.css";
 import { useAuthStore } from "./store/authStore";
@@ -12,12 +19,11 @@ import AdminPages from "./pages/AdminPages";
 import BookingPage from "./pages/BookingPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import EventsPage from "./pages/EventsPage";
-import Excursions from "./pages/Excursions/Excursions";
-import FAQ from "./pages/FAQ/FAQ";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import PaymentReturnPage from "./pages/PaymentReturnPage";
 import ProfilePage from "./pages/ProfilePage";
-import Workshops from "./pages/Workshops/Workshops";
+import RegisterPage from "./pages/RegisterPage";
 
 const appTheme: ThemeConfig = {
   algorithm: theme.defaultAlgorithm,
@@ -36,6 +42,16 @@ const appTheme: ThemeConfig = {
   },
 };
 
+function LegacyEventBookingRedirect() {
+  const [params] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
+  const sid = params.get("scheduleId");
+  if (sid && /^\d+$/.test(sid)) {
+    return <Navigate to={`/book/${sid}`} replace />;
+  }
+  return <Navigate to={id ? `/events/${id}` : "/events"} replace />;
+}
+
 function AppRoutes() {
   const checkAuth = useAuthStore((s) => s.checkAuth);
 
@@ -45,23 +61,26 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
-        <Header />
-        <main className="app-main">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/events/:id" element={<EventDetailPage />} />
-            <Route path="/events/:id/booking" element={<BookingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/admin" element={<AdminPages />} />
-            <Route path="/excursions" element={<Excursions />} />
-            <Route path="/workshops" element={<Workshops />} />
-            <Route path="/faq" element={<FAQ />} />
-          </Routes>
-        </main>
-        <Footer />
-      </BrowserRouter>
+      <Header />
+      <main className="app-main">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/events/:id" element={<EventDetailPage />} />
+          <Route
+            path="/events/:id/booking"
+            element={<LegacyEventBookingRedirect />}
+          />
+          <Route path="/book/:scheduleId" element={<BookingPage />} />
+          <Route path="/payment/return" element={<PaymentReturnPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminPages />} />
+        </Routes>
+      </main>
+      <Footer />
+    </BrowserRouter>
   );
 }
 

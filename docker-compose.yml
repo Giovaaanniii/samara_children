@@ -40,8 +40,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    # Весь репозиторий: alembic.ini и alembic/ лежат в корне проекта, не в backend/
+    working_dir: /srv/backend
     volumes:
-      - ./backend:/app
+      - .:/srv
+    command:
+      [
+        "sh",
+        "-c",
+        "cd /srv && alembic upgrade head && cd /srv/backend && python seed_demo.py && uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
+      ]
 
   frontend:
     build:

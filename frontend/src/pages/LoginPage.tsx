@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Form, Input, Typography, message } from "antd";
 import { Controller, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
 import { loginSchema, type LoginFormValues } from "../utils/validation";
@@ -10,6 +10,8 @@ const { Title } = Typography;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/profile";
   const login = useAuthStore((s) => s.login);
   const {
     control,
@@ -24,7 +26,7 @@ export default function LoginPage() {
     try {
       await login(values.login, values.password);
       message.success("Вход выполнен");
-      navigate("/profile", { replace: true });
+      navigate(redirect, { replace: true });
     } catch {
       message.error("Неверный логин или пароль");
     }
@@ -70,6 +72,18 @@ export default function LoginPage() {
           Войти
         </Button>
       </Form>
+      <Typography.Paragraph style={{ textAlign: "center", marginTop: 16 }}>
+        Нет аккаунта?{" "}
+        <Link
+          to={
+            redirect !== "/profile"
+              ? `/register?redirect=${encodeURIComponent(redirect)}`
+              : "/register"
+          }
+        >
+          Зарегистрироваться
+        </Link>
+      </Typography.Paragraph>
     </div>
   );
 }
