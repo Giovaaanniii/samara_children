@@ -61,3 +61,18 @@ async def clear_booking_lock_only(r: redis.Redis, schedule_id: int, user_id: int
     """После успешной оплаты: только снять lock, слоты в Redis уже уменьшены при бронировании."""
     lock_k = LOCK_KEY.format(schedule_id=schedule_id, user_id=user_id)
     await r.delete(lock_k)
+
+
+async def restore_slots_after_paid_cancel(
+    r: redis.Redis,
+    schedule_id: int,
+    need: int,
+    new_db_available: int,
+) -> None:
+    """После отмены подтверждённого бронирования: вернуть места в зеркале Redis."""
+    slots_key = SLOTS_KEY.format(schedule_id=schedule_id)
+    cur = await r.get(slots_key)
+    if cur is None:
+        await r.set(slots_key, new_db_available)
+    else:
+        await r.incrby(slots_key, need)

@@ -98,6 +98,29 @@ async def create_payment(
     return demo_url, f"demo-{booking_id}"
 
 
+def _create_refund_sync(payment_id: str, amount: Decimal) -> str:
+    from yookassa import Refund
+
+    amount_str = f"{amount.quantize(Decimal('0.01')):.2f}"
+    refund = Refund.create(
+        {
+            "payment_id": payment_id,
+            "amount": {"value": amount_str, "currency": "RUB"},
+        },
+    )
+    rid = refund.id
+    if not rid:
+        raise RuntimeError("YooKassa: нет id возврата в ответе")
+    return rid
+
+
+async def create_refund(payment_id: str, amount: Decimal) -> str:
+    """Создаёт полный возврат по платежу в ЮKassa. Требуются shop_id и secret_key."""
+    if not _configure_yookassa():
+        raise ValueError("YooKassa не настроена")
+    return await asyncio.to_thread(_create_refund_sync, payment_id, amount)
+
+
 async def handle_webhook(
     request: Request,
     db: AsyncSession,

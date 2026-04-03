@@ -221,13 +221,54 @@ class BookingResponse(BaseModel):
     customer_notes: str | None
     created_at: datetime
     confirmed_at: datetime | None
-    payment_url: str
+    payment_url: str | None = None
     payment_id: str | None = None
 
     @computed_field
     @property
     def booking_id(self) -> int:
         return self.id
+
+
+class ParticipantResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    first_name: str
+    last_name: str
+    patronymic: str | None
+    age: int | None
+    is_child: bool
+    special_notes: str | None
+
+
+class EventBriefResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+
+
+class ScheduleBriefResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    start_datetime: datetime
+    end_datetime: datetime
+    status: ScheduleStatus
+
+
+class BookingDetailResponse(BookingResponse):
+    participants: list[ParticipantResponse]
+    event: EventBriefResponse
+    schedule: ScheduleBriefResponse
+
+
+class BookingCancelResponse(BaseModel):
+    booking: BookingResponse
+    refund_id: str | None = None
+    refund_initiated: bool = False
+    message: str | None = None
 
 
 class ReviewCreate(BaseModel):
