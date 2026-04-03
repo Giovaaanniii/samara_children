@@ -12,6 +12,7 @@ from routers.schedules import router as schedules_router
 from routers.guides import router as guides_router
 from routers.reviews import router as reviews_router
 from routers.bookings import router as bookings_router
+from routers.payments import router as payments_router
 
 app = FastAPI(
     title="Самара Детям API",
@@ -48,3 +49,4 @@ app.include_router(schedules_router, prefix="/api/v1")
 app.include_router(guides_router, prefix="/api/v1")
 app.include_router(reviews_router, prefix="/api/v1")
 app.include_router(bookings_router, prefix="/api/v1")
+app.include_router(payments_router, prefix="/api/v1")

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_current_user
+from config import settings
 from database import get_db
 from models import (
     Booking,
@@ -23,7 +24,7 @@ from services.booking_lock import (
     release_reservation,
     reserve_slots_and_lock,
 )
-from services.payment_service import create_yookassa_payment
+from services.payment_service import create_payment
 from services.redis_client import RedisDep
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -118,10 +119,11 @@ async def create_booking(
         )
         raise
 
-    payment_url = await create_yookassa_payment(
+    payment_url, payment_id = await create_payment(
         booking_id=booking.id,
         amount=booking.total_price,
         description=f"Бронирование #{booking.id}, мероприятие: {event.title}",
+        return_url=settings.PAYMENT_RETURN_URL,
     )
 
     return BookingResponse(
@@ -135,4 +137,5 @@ async def create_booking(
         created_at=booking.created_at,
         confirmed_at=booking.confirmed_at,
         payment_url=payment_url,
+        payment_id=payment_id,
     )

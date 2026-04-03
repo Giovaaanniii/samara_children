@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     YOOKASSA_SHOP_ID: str = ""
     YOOKASSA_SECRET_KEY: str = ""
+    # URL возврата пользователя после оплаты (redirect)
+    PAYMENT_RETURN_URL: str = "http://localhost:3000/payment/return"
     SENDGRID_API_KEY: str = ""
     FIREBASE_CREDENTIALS_PATH: str = ""
     EMAIL_FROM: str = ""

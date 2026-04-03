@@ -222,6 +222,7 @@ class BookingResponse(BaseModel):
     created_at: datetime
     confirmed_at: datetime | None
     payment_url: str
+    payment_id: str | None = None
 
     @computed_field
     @property

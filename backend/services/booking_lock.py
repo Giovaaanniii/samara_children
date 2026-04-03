@@ -55,3 +55,9 @@ async def release_reservation(r: redis.Redis, schedule_id: int, user_id: int, ne
     lock_k = LOCK_KEY.format(schedule_id=schedule_id, user_id=user_id)
     await r.incrby(slots_key, need)
     await r.delete(lock_k)
+
+
+async def clear_booking_lock_only(r: redis.Redis, schedule_id: int, user_id: int) -> None:
+    """После успешной оплаты: только снять lock, слоты в Redis уже уменьшены при бронировании."""
+    lock_k = LOCK_KEY.format(schedule_id=schedule_id, user_id=user_id)
+    await r.delete(lock_k)
