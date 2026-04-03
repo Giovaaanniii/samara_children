@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 
 from services.email_service import send_booking_confirmation_email
+from services.notification_service import send_push_notification
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,12 @@ async def send_payment_confirmation_email(
 
 
 async def send_payment_confirmation_push(user_id: int, booking_id: int) -> None:
-    logger.info(
-        "Push: подтверждение оплаты бронирования id=%s для user_id=%s",
-        booking_id,
+    await send_push_notification(
         user_id,
+        title="Бронирование подтверждено",
+        body=f"Оплата прошла успешно. Бронирование №{booking_id}.",
+        data={
+            "type": "payment_confirmed",
+            "booking_id": str(booking_id),
+        },
     )

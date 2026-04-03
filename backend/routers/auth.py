@@ -126,6 +126,9 @@ async def update_me(
         current_user.patronymic = body.patronymic
     if body.phone is not None:
         current_user.phone = body.phone
+    if body.fcm_token is not None:
+        t = body.fcm_token.strip()
+        current_user.fcm_token = t if t else None
 
     await db.commit()
     await db.refresh(current_user)

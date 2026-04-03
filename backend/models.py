@@ -106,6 +106,8 @@ class User(Base):
     )
     auth_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # FCM (мобильное приложение или Web Push через Firebase)
+    fcm_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     bookings: Mapped[list[Booking]] = relationship(
         back_populates="user",

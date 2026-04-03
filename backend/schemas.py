@@ -37,6 +37,7 @@ class UserResponse(BaseModel):
     phone: str | None
     avatar_url: str | None
     is_active: bool
+    fcm_token: str | None = None
 
 
 class UserUpdate(BaseModel):
@@ -47,6 +48,10 @@ class UserUpdate(BaseModel):
     last_name: str | None = Field(None, max_length=255)
     patronymic: str | None = Field(None, max_length=255)
     phone: str | None = Field(None, max_length=32)
+    fcm_token: str | None = Field(
+        None,
+        description="FCM-токен (мобильное приложение или Web Push через Firebase)",
+    )
 
 
 class Token(BaseModel):
