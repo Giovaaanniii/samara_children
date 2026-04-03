@@ -3,7 +3,6 @@ import { Button, Form, Input, Typography, message } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-import { authApi } from "../services/authApi";
 import { useAuthStore } from "../store/authStore";
 import { loginSchema, type LoginFormValues } from "../utils/validation";
 
@@ -11,7 +10,7 @@ const { Title } = Typography;
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const setToken = useAuthStore((s) => s.setToken);
+  const login = useAuthStore((s) => s.login);
   const {
     control,
     handleSubmit,
@@ -23,8 +22,7 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      const { data } = await authApi.login(values);
-      setToken(data.access_token);
+      await login(values.login, values.password);
       message.success("Вход выполнен");
       navigate("/profile", { replace: true });
     } catch {

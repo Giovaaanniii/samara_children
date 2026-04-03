@@ -1,8 +1,10 @@
 import { ConfigProvider } from "antd";
 import ruRU from "antd/locale/ru_RU";
+import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import "./App.css";
+import { useAuthStore } from "./store/authStore";
 import Footer from "./components/Footer";
 import Header from "./components/Header/Header";
 import AdminPages from "./pages/AdminPages";
@@ -16,10 +18,15 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import Workshops from "./pages/Workshops/Workshops";
 
-function App() {
+function AppRoutes() {
+  const checkAuth = useAuthStore((s) => s.checkAuth);
+
+  useEffect(() => {
+    void checkAuth();
+  }, [checkAuth]);
+
   return (
-    <ConfigProvider locale={ruRU}>
-      <BrowserRouter>
+    <BrowserRouter>
         <Header />
         <main className="app-main">
           <Routes>
@@ -37,6 +44,13 @@ function App() {
         </main>
         <Footer />
       </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <ConfigProvider locale={ruRU}>
+      <AppRoutes />
     </ConfigProvider>
   );
 }

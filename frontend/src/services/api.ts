@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().clearAuth();
+      useAuthStore.getState().logout();
     }
     return Promise.reject(error);
   },

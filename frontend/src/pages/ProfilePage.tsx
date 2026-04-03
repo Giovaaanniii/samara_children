@@ -1,41 +1,27 @@
-import { Card, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { Card, Spin, Typography } from "antd";
 
-import { authApi } from "../services/authApi";
-import type { User } from "../types";
+import { useAuthStore } from "../store/authStore";
 
 const { Title, Paragraph } = Typography;
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data } = await authApi.me();
-        if (!cancelled) setUser(data);
-      } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Нужна авторизация");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (error) {
+  if (isLoading) {
     return (
-      <Paragraph type="danger" style={{ padding: 24 }}>
-        {error}
-      </Paragraph>
+      <div style={{ textAlign: "center", padding: 48 }}>
+        <Spin size="large" />
+      </div>
     );
   }
 
   if (!user) {
-    return <Paragraph style={{ padding: 24 }}>Загрузка…</Paragraph>;
+    return (
+      <Paragraph type="warning" style={{ padding: 24 }}>
+        Войдите в систему, чтобы видеть профиль.
+      </Paragraph>
+    );
   }
 
   return (
