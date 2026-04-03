@@ -1,3 +1,9 @@
 .app-main {
+  flex: 1;
   min-height: 60vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }

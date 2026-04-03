@@ -1,0 +1,42 @@
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 56px;
+}
+
+.hero {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  min-height: 220px;
+  background: linear-gradient(135deg, #fff5f5 0%, #fdeaea 50%, #f5e0e0 100%);
+  border: 1px solid rgba(184, 50, 50, 0.12);
+}
+
+.heroImg {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.heroFallback {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a63a3a;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.meta {
+  margin-bottom: 20px;
+}
+
+.reviewCard {
+  margin-bottom: 12px;
+  border-radius: 10px;
+}

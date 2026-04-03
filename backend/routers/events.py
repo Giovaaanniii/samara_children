@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from datetime import date, datetime, time, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from auth import get_current_admin
 from database import get_db
-from models import Event, EventCategory, EventStatus, User
+from models import Event, EventCategory, EventStatus, Schedule, User
 from schemas import (
     EventCreate,
     EventDetailResponse,
@@ -36,6 +37,18 @@ async def list_events(
         alias="status",
         description="Статус мероприятия",
     ),
+    q: str | None = Query(
+        None,
+        description="Поиск по подстроке в названии мероприятия",
+    ),
+    date_from: date | None = Query(
+        None,
+        description="Есть сеанс не раньше этой даты (UTC)",
+    ),
+    date_to: date | None = Query(
+        None,
+        description="Есть сеанс не позже этой даты (UTC)",
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ) -> EventListResponse:
@@ -46,12 +59,30 @@ async def list_events(
         filters.append(Event.target_audience.ilike(f"%{target_audience}%"))
     if event_status is not None:
         filters.append(Event.status == event_status)
+    if q:
+        filters.append(Event.title.ilike(f"%{q}%"))
 
     base = select(Event)
     count_stmt = select(func.count()).select_from(Event)
     for f in filters:
         base = base.where(f)
         count_stmt = count_stmt.where(f)
+
+    if date_from is not None or date_to is not None:
+        sch_parts = [Schedule.event_id == Event.id]
+        if date_from is not None:
+            start_dt = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+            sch_parts.append(Schedule.start_datetime >= start_dt)
+        if date_to is not None:
+            end_dt = datetime.combine(
+                date_to,
+                time(23, 59, 59, 999999),
+                tzinfo=timezone.utc,
+            )
+            sch_parts.append(Schedule.start_datetime <= end_dt)
+        has_schedule = exists().where(and_(*sch_parts))
+        base = base.where(has_schedule)
+        count_stmt = count_stmt.where(has_schedule)
 
     total_result = await db.execute(count_stmt)
     total = int(total_result.scalar_one())

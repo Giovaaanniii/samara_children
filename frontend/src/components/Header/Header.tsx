@@ -1,35 +1,47 @@
-import s from "./Header.module.css";
-import ar from "../../assets/Icon.png";
-import { Link } from 'react-router-dom';
-function Header() {
+import { UserOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
+
+import styles from "./Header.module.css";
+
+export default function Header() {
   return (
-    <div className={s.header_container}>
-      <div className={s.textalign}>
-        <h3>САМАРА</h3>
-        <h3>ДЕТЯМ</h3>
+    <header className={styles.header}>
+      <div className={styles.inner}>
+        <Link to="/" className={styles.brand}>
+          <div className={styles.logoSlot} title="Загрузите логотип в /src/assets/">
+            <span className={styles.logoHint}>логотип</span>
+          </div>
+          <div className={styles.brandText}>
+            <span className={styles.brandTitle}>Самара</span>
+            <span className={styles.brandSub}>детям</span>
+          </div>
+        </Link>
+
+        <nav className={styles.nav}>
+          <Link to="/" className={styles.navLink}>
+            Главная
+          </Link>
+          <Link to="/events" className={styles.navLink}>
+            Мероприятия
+          </Link>
+          <Link to="/excursions" className={styles.navLink}>
+            Экскурсии
+          </Link>
+          <Link to="/workshops" className={styles.navLink}>
+            Мастер-классы
+          </Link>
+          <Link to="/faq" className={styles.navLink}>
+            FAQ
+          </Link>
+        </nav>
+
+        <div className={styles.actions}>
+          <UserOutlined className={styles.userIcon} aria-hidden />
+          <Link to="/login" className={styles.loginLink}>
+            Войти
+          </Link>
+        </div>
       </div>
-      <div className={s.links_container}>
-        <Link  to="/" className={s.link}>
-          Главная
-        </Link >
-        <Link  to="/events" className={s.link}>
-          Мероприятия
-        </Link >
-        <Link  to="/excursions" className={s.link}>
-          Экскурсии
-        </Link >
-        <Link  to="/workshops" className={s.link}>
-          Мастер-классы
-        </Link >
-        <Link  to="/faq" className={s.link}>
-          FAQ
-        </Link >
-      </div>
-      <div className={s.entry_container}>
-        <img src={ar} className={s.entry_image} alt="" />
-        <Link to="/login" className={s.link_entry}>Войти</Link>
-      </div>
-    </div>
+    </header>
   );
 }
-export default Header;

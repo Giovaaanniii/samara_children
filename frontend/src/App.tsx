@@ -1,4 +1,5 @@
-import { ConfigProvider } from "antd";
+import { ConfigProvider, theme } from "antd";
+import type { ThemeConfig } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -17,6 +18,23 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import Workshops from "./pages/Workshops/Workshops";
+
+const appTheme: ThemeConfig = {
+  algorithm: theme.defaultAlgorithm,
+  token: {
+    colorPrimary: "#b83232",
+    colorLink: "#b83232",
+    colorLinkHover: "#942828",
+    borderRadius: 10,
+    fontFamily:
+      "'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif",
+  },
+  components: {
+    Button: {
+      primaryShadow: "0 4px 12px rgba(184, 50, 50, 0.25)",
+    },
+  },
+};
 
 function AppRoutes() {
   const checkAuth = useAuthStore((s) => s.checkAuth);
@@ -49,7 +67,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ConfigProvider locale={ruRU}>
+    <ConfigProvider locale={ruRU} theme={appTheme}>
       <AppRoutes />
     </ConfigProvider>
   );
