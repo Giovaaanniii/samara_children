@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from models import EventCategory, EventStatus, ScheduleStatus, UserRole
 
@@ -115,6 +115,29 @@ class ScheduleResponse(BaseModel):
     available_slots: int
     status: ScheduleStatus
     guide_id: int | None
+
+
+class ScheduleCreate(BaseModel):
+    event_id: int = Field(..., ge=1)
+    start_datetime: datetime
+    end_datetime: datetime
+    available_slots: int = Field(..., ge=0)
+    status: ScheduleStatus = ScheduleStatus.open
+    guide_id: int | None = Field(None, ge=1)
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> ScheduleCreate:
+        if self.end_datetime <= self.start_datetime:
+            raise ValueError("end_datetime должно быть позже start_datetime")
+        return self
+
+
+class ScheduleUpdate(BaseModel):
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    available_slots: int | None = Field(None, ge=0)
+    status: ScheduleStatus | None = None
+    guide_id: int | None = Field(None, ge=1)
 
 
 class ReviewResponse(BaseModel):
