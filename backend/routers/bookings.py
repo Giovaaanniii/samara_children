@@ -208,8 +208,8 @@ async def list_my_bookings(
     current_user: Annotated[User, Depends(get_current_user)],
     booking_status: Annotated[
         BookingStatus | None,
-        Query(None, alias="status", description="Фильтр по статусу бронирования"),
-    ],
+        Query(alias="status", description="Фильтр по статусу бронирования"),
+    ] = None,
 ) -> list[BookingResponse]:
     q = select(Booking).where(Booking.user_id == current_user.id)
     if booking_status is not None:

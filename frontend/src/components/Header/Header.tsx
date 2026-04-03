@@ -27,7 +27,7 @@ function Header() {
       </div>
       <div className={s.entry_container}>
         <img src={ar} className={s.entry_image} alt="" />
-        <Link to="sign" className={s.link_entry}>Войти</Link>
+        <Link to="/login" className={s.link_entry}>Войти</Link>
       </div>
     </div>
   );
