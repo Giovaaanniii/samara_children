@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from datetime import datetime
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from models import UserRole
+from models import EventCategory, EventStatus, ScheduleStatus, UserRole
 
 
 class UserCreate(BaseModel):
@@ -53,3 +56,88 @@ class LoginRequest(BaseModel):
         description="Логин или email",
     )
     password: str = Field(..., min_length=1, max_length=128)
+
+
+# --- Мероприятия (events) ---
+
+
+class EventCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=512)
+    description: str | None = None
+    category: EventCategory
+    target_audience: str | None = Field(None, max_length=512)
+    duration_minutes: int | None = Field(None, ge=1)
+    max_participants: int | None = Field(None, ge=1)
+    base_price: Decimal = Field(default=Decimal("0"), ge=0)
+    status: EventStatus = EventStatus.active
+    meeting_point: str | None = None
+    cover_image_url: str | None = Field(None, max_length=1024)
+
+
+class EventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    description: str | None
+    category: EventCategory
+    target_audience: str | None
+    duration_minutes: int | None
+    max_participants: int | None
+    base_price: Decimal
+    status: EventStatus
+    meeting_point: str | None
+    cover_image_url: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class EventUpdate(BaseModel):
+    title: str | None = Field(None, min_length=1, max_length=512)
+    description: str | None = None
+    category: EventCategory | None = None
+    target_audience: str | None = Field(None, max_length=512)
+    duration_minutes: int | None = Field(None, ge=1)
+    max_participants: int | None = Field(None, ge=1)
+    base_price: Decimal | None = Field(None, ge=0)
+    status: EventStatus | None = None
+    meeting_point: str | None = None
+    cover_image_url: str | None = Field(None, max_length=1024)
+
+
+class ScheduleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    event_id: int
+    start_datetime: datetime
+    end_datetime: datetime
+    available_slots: int
+    status: ScheduleStatus
+    guide_id: int | None
+
+
+class ReviewResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    event_id: int
+    booking_id: int
+    rating: int
+    comment: str | None
+    guide_rating: int | None
+    created_at: datetime
+    is_published: bool
+
+
+class EventDetailResponse(EventResponse):
+    schedules: list[ScheduleResponse]
+    reviews: list[ReviewResponse]
+
+
+class EventListResponse(BaseModel):
+    items: list[EventResponse]
+    total: int
+    skip: int
+    limit: int
