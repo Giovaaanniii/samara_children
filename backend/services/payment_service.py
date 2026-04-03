@@ -17,6 +17,7 @@ from config import settings
 from models import (
     Booking,
     BookingStatus,
+    Event,
     PaymentMethod,
     Schedule,
     Transaction,
@@ -178,6 +179,9 @@ async def handle_webhook(
     if schedule is None:
         return {"ok": False, "error": "schedule_not_found"}
 
+    event = await db.get(Event, schedule.event_id)
+    event_title = event.title if event else "Мероприятие"
+
     amount_str = (obj.get("amount") or {}).get("value")
     if amount_str is not None:
         paid = Decimal(str(amount_str))
@@ -222,7 +226,13 @@ async def handle_webhook(
 
     try:
         if user.email:
-            await send_payment_confirmation_email(user.email, booking.id)
+            await send_payment_confirmation_email(
+                user.email,
+                booking.id,
+                event_title=event_title,
+                start_at=schedule.start_datetime,
+                participants_count=booking.participants_count,
+            )
         await send_payment_confirmation_push(user.id, booking.id)
     except Exception:
         logger.exception(

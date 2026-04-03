@@ -1,5 +1,4 @@
 from functools import lru_cache
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -39,10 +38,12 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     FIREBASE_CREDENTIALS_PATH: str = ""
     EMAIL_FROM: str = ""
+    # Публичный URL фронтенда (ссылки в письмах, QR)
+    FRONTEND_URL: str = "http://localhost:3000"
 
     @property
     def cors_origins(self) -> list[str]:
-        frontend = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+        frontend = self.FRONTEND_URL.rstrip("/")
         origins = {
             "http://localhost:3000",
             "http://localhost:5173",
