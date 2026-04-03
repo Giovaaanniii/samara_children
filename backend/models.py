@@ -52,6 +52,7 @@ class ScheduleStatus(str, PyEnum):
 
 class BookingStatus(str, PyEnum):
     draft = "draft"
+    pending = "pending"  # ожидает оплаты
     confirmed = "confirmed"
     cancelled = "cancelled"
     completed = "completed"

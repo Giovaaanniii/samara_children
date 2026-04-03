@@ -3,9 +3,15 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, model_validator
 
-from models import EventCategory, EventStatus, ScheduleStatus, UserRole
+from models import (
+    BookingStatus,
+    EventCategory,
+    EventStatus,
+    ScheduleStatus,
+    UserRole,
+)
 
 
 class UserCreate(BaseModel):
@@ -177,6 +183,50 @@ class GuideResponse(BaseModel):
     specialization: str | None
     hire_date: date | None
     is_active: bool
+
+
+class ParticipantCreate(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=255)
+    last_name: str = Field(..., min_length=1, max_length=255)
+    patronymic: str | None = Field(None, max_length=255)
+    age: int | None = Field(None, ge=0, le=120)
+    is_child: bool = True
+    special_notes: str | None = None
+
+
+class BookingCreate(BaseModel):
+    schedule_id: int = Field(..., ge=1)
+    participants_count: int = Field(..., ge=1)
+    customer_notes: str | None = None
+    participants: list[ParticipantCreate]
+
+    @model_validator(mode="after")
+    def participants_match_count(self) -> BookingCreate:
+        if len(self.participants) != self.participants_count:
+            raise ValueError(
+                "Число записей в participants должно совпадать с participants_count",
+            )
+        return self
+
+
+class BookingResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    schedule_id: int
+    status: BookingStatus
+    participants_count: int
+    total_price: Decimal
+    customer_notes: str | None
+    created_at: datetime
+    confirmed_at: datetime | None
+    payment_url: str
+
+    @computed_field
+    @property
+    def booking_id(self) -> int:
+        return self.id
 
 
 class ReviewCreate(BaseModel):
