@@ -241,6 +241,9 @@ class BookingResponse(BaseModel):
     confirmed_at: datetime | None
     payment_url: str | None = None
     payment_id: str | None = None
+    # Для списка «Мои бронирования» (подгружаются в роутере)
+    event_title: str | None = None
+    schedule_start_datetime: datetime | None = None
 
     @computed_field
     @property
@@ -267,6 +270,18 @@ class EventBriefResponse(BaseModel):
     title: str
 
 
+class EventBookingInfoResponse(BaseModel):
+    """Краткая карточка мероприятия в деталях бронирования."""
+
+    id: int
+    title: str
+    description: str | None
+    meeting_point: str | None
+    duration_minutes: int | None
+    category: EventCategory
+    base_price: Decimal
+
+
 class ScheduleBriefResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -278,8 +293,9 @@ class ScheduleBriefResponse(BaseModel):
 
 class BookingDetailResponse(BookingResponse):
     participants: list[ParticipantResponse]
-    event: EventBriefResponse
+    event: EventBookingInfoResponse
     schedule: ScheduleBriefResponse
+    qr_code_data_uri: str = ""
 
 
 class BookingCancelResponse(BaseModel):

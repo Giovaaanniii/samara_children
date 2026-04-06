@@ -25,6 +25,7 @@ interface AuthState {
   register: (data: UserCreate) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -66,6 +67,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     writeTokenToStorage(null);
     set({ user: null, token: null });
   },
+
+  setUser: (user) => set({ user }),
 
   checkAuth: async () => {
     const stored = readTokenFromStorage();

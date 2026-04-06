@@ -39,3 +39,21 @@ export const bookingFormSchema = z.object({
 
 export type BookingFormValues = z.infer<typeof bookingFormSchema>;
 export type ParticipantFormRow = z.infer<typeof participantRowSchema>;
+
+export const profileSchema = z
+  .object({
+    login: z.string().min(1, "Укажите логин"),
+    email: z.string().email("Некорректный email"),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    patronymic: z.string().optional(),
+    phone: z.string().optional(),
+    password: z.union([z.string().min(8, "Минимум 8 символов"), z.literal("")]).optional(),
+    password2: z.string().optional(),
+  })
+  .refine((d) => !d.password || d.password === d.password2, {
+    message: "Пароли не совпадают",
+    path: ["password2"],
+  });
+
+export type ProfileFormValues = z.infer<typeof profileSchema>;

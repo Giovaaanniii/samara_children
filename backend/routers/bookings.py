@@ -30,7 +30,7 @@ from schemas import (
     BookingCreate,
     BookingDetailResponse,
     BookingResponse,
-    EventBriefResponse,
+    EventBookingInfoResponse,
     ParticipantResponse,
     ScheduleBriefResponse,
 )
@@ -40,6 +40,7 @@ from services.booking_lock import (
     reserve_slots_and_lock,
     restore_slots_after_paid_cancel,
 )
+from services.email_service import booking_qr_data_uri
 from services.payment_service import create_payment, create_refund
 from services.redis_client import RedisDep
 
@@ -65,7 +66,14 @@ def _payment_return_url_with_booking(booking_id: int) -> str:
     )
 
 
-def _booking_to_response(booking: Booking) -> BookingResponse:
+def _booking_to_response(
+    booking: Booking,
+    *,
+    event_title: str | None = None,
+    schedule_start_datetime: datetime | None = None,
+    payment_url: str | None = None,
+    payment_id: str | None = None,
+) -> BookingResponse:
     return BookingResponse(
         id=booking.id,
         user_id=booking.user_id,
@@ -76,8 +84,10 @@ def _booking_to_response(booking: Booking) -> BookingResponse:
         customer_notes=booking.customer_notes,
         created_at=booking.created_at,
         confirmed_at=booking.confirmed_at,
-        payment_url=None,
-        payment_id=None,
+        payment_url=payment_url,
+        payment_id=payment_id,
+        event_title=event_title,
+        schedule_start_datetime=schedule_start_datetime,
     )
 
 
@@ -207,16 +217,8 @@ async def create_booking(
         return_url=_payment_return_url_with_booking(booking.id),
     )
 
-    return BookingResponse(
-        id=booking.id,
-        user_id=booking.user_id,
-        schedule_id=booking.schedule_id,
-        status=booking.status,
-        participants_count=booking.participants_count,
-        total_price=booking.total_price,
-        customer_notes=booking.customer_notes,
-        created_at=booking.created_at,
-        confirmed_at=booking.confirmed_at,
+    return _booking_to_response(
+        booking,
         payment_url=payment_url,
         payment_id=payment_id,
     )
@@ -231,13 +233,32 @@ async def list_my_bookings(
         Query(alias="status", description="Фильтр по статусу бронирования"),
     ] = None,
 ) -> list[BookingResponse]:
-    q = select(Booking).where(Booking.user_id == current_user.id)
+    q = (
+        select(Booking)
+        .options(selectinload(Booking.schedule).selectinload(Schedule.event))
+        .where(Booking.user_id == current_user.id)
+    )
     if booking_status is not None:
         q = q.where(Booking.status == booking_status)
     q = q.order_by(Booking.created_at.desc())
     result = await db.execute(q)
     rows = result.scalars().all()
-    return [_booking_to_response(b) for b in rows]
+    out: list[BookingResponse] = []
+    for b in rows:
+        ev_title: str | None = None
+        sch_start: datetime | None = None
+        if b.schedule is not None:
+            sch_start = b.schedule.start_datetime
+            if b.schedule.event is not None:
+                ev_title = b.schedule.event.title
+        out.append(
+            _booking_to_response(
+                b,
+                event_title=ev_title,
+                schedule_start_datetime=sch_start,
+            ),
+        )
+    return out
 
 
 @router.get("/{booking_id}", response_model=BookingDetailResponse)
@@ -269,6 +290,15 @@ async def get_booking(
     assert booking.schedule.event is not None
     ev = booking.schedule.event
     sch = booking.schedule
+    qr_uri = ""
+    # Пропуск по QR только до конца сеанса; после окончания мероприятия не отдаём.
+    if booking.status == BookingStatus.confirmed and sch.end_datetime > datetime.now(
+        timezone.utc,
+    ):
+        try:
+            qr_uri = booking_qr_data_uri(booking.id)
+        except Exception:
+            qr_uri = ""
     return BookingDetailResponse(
         id=booking.id,
         user_id=booking.user_id,
@@ -281,14 +311,25 @@ async def get_booking(
         confirmed_at=booking.confirmed_at,
         payment_url=None,
         payment_id=None,
+        event_title=ev.title,
+        schedule_start_datetime=sch.start_datetime,
         participants=[ParticipantResponse.model_validate(p) for p in booking.participants],
-        event=EventBriefResponse(id=ev.id, title=ev.title),
+        event=EventBookingInfoResponse(
+            id=ev.id,
+            title=ev.title,
+            description=ev.description,
+            meeting_point=ev.meeting_point,
+            duration_minutes=ev.duration_minutes,
+            category=ev.category,
+            base_price=ev.base_price,
+        ),
         schedule=ScheduleBriefResponse(
             id=sch.id,
             start_datetime=sch.start_datetime,
             end_datetime=sch.end_datetime,
             status=sch.status,
         ),
+        qr_code_data_uri=qr_uri,
     )
 
 
@@ -333,12 +374,6 @@ async def cancel_booking(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Нельзя отменить завершённое бронирование",
         )
-    if booking.status == BookingStatus.draft:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Черновик нельзя отменить через этот метод",
-        )
-
     _assert_may_cancel_by_time(schedule)
 
     refund_id: str | None = None

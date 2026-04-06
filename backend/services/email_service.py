@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 BOOKING_QR_PREFIX = "samara-booking"
 
 
-def _booking_qr_data_uri(booking_id: int) -> str:
+def booking_qr_data_uri(booking_id: int) -> str:
     payload = f"{BOOKING_QR_PREFIX}:{booking_id}"
     qr = qrcode.QRCode(version=None, box_size=4, border=2)
     qr.add_data(payload)
@@ -76,7 +76,7 @@ def template_booking_confirmation_html(
     """Подтверждение бронирования: QR и ссылка на бронь."""
     link = booking_url or f"{settings.FRONTEND_URL.rstrip('/')}/bookings/{booking_id}"
     try:
-        qr_src = _booking_qr_data_uri(booking_id)
+        qr_src = booking_qr_data_uri(booking_id)
     except Exception:
         logger.exception("QR для бронирования %s не сгенерирован", booking_id)
         qr_src = ""

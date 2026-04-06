@@ -1,0 +1,41 @@
+.page {
+  padding: 24px 20px 48px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  margin-bottom: 16px !important;
+}
+
+.profileCard {
+  margin-bottom: 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(184, 50, 50, 0.12);
+}
+
+.bookingsCard {
+  border-radius: 12px;
+  border: 1px solid rgba(184, 50, 50, 0.12);
+}
+
+.filterRow {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.qrBlock {
+  text-align: center;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.qrBlock img {
+  max-width: 220px;
+  height: auto;
+}

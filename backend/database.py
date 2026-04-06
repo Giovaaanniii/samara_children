@@ -12,6 +12,9 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
+    # asyncpg кеширует prepared statements; после миграций это может дать
+    # InvalidCachedStatementError на первый запрос. Для dev-стека отключаем кеш.
+    connect_args={"statement_cache_size": 0},
 )
 
 async_session_maker = async_sessionmaker(

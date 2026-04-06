@@ -3,7 +3,6 @@
 export type UserRole = "client" | "admin";
 
 export type BookingStatus =
-  | "draft"
   | "pending"
   | "confirmed"
   | "cancelled"
@@ -155,6 +154,9 @@ export interface BookingResponse {
   payment_url?: string | null;
   payment_id?: string | null;
   booking_id?: number;
+  /** Список «Мои бронирования» */
+  event_title?: string | null;
+  schedule_start_datetime?: string | null;
 }
 
 export interface Participant {
@@ -167,9 +169,14 @@ export interface Participant {
   special_notes: string | null;
 }
 
-export interface EventBrief {
+export interface EventBookingInfo {
   id: number;
   title: string;
+  description: string | null;
+  meeting_point: string | null;
+  duration_minutes: number | null;
+  category: EventCategory;
+  base_price: string;
 }
 
 export interface ScheduleBrief {
@@ -181,8 +188,9 @@ export interface ScheduleBrief {
 
 export interface BookingDetail extends BookingResponse {
   participants: Participant[];
-  event: EventBrief;
+  event: EventBookingInfo;
   schedule: ScheduleBrief;
+  qr_code_data_uri?: string;
 }
 
 export interface BookingCancelResponse {

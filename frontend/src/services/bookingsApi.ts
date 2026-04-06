@@ -8,7 +8,6 @@ import type {
 import { api } from "./api";
 
 export type BookingStatusFilter =
-  | "draft"
   | "pending"
   | "confirmed"
   | "cancelled"

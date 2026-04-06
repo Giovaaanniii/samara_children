@@ -51,7 +51,6 @@ class ScheduleStatus(str, PyEnum):
 
 
 class BookingStatus(str, PyEnum):
-    draft = "draft"
     pending = "pending"  # ожидает оплаты
     confirmed = "confirmed"
     cancelled = "cancelled"
@@ -210,7 +209,7 @@ class Booking(Base):
     )
     status: Mapped[BookingStatus] = mapped_column(
         Enum(BookingStatus, name="booking_status", native_enum=True),
-        default=BookingStatus.draft,
+        default=BookingStatus.pending,
     )
     participants_count: Mapped[int] = mapped_column(Integer, default=1)
     total_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
