@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Form, Input, Typography, message } from "antd";
+import { Button, Form, Input, Spin, Typography, message } from "antd";
 import { Controller, useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
 import {
@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect") || "/profile";
   const register = useAuthStore((s) => s.register);
+  const user = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.isLoading);
 
   const {
     control,
@@ -49,6 +51,17 @@ export default function RegisterPage() {
       message.error(getApiErrorDetail(e));
     }
   };
+
+  if (authLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: 48 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+  if (user) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <div style={{ maxWidth: 440, margin: "48px auto", padding: 16 }}>

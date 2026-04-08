@@ -28,10 +28,13 @@ interface AuthState {
   setUser: (user: User) => void;
 }
 
+/** Пока токен в storage не проверен через /me — не считаем сессию «пустой» (избегаем ложного редиректа на /login). */
+const initialToken = readTokenFromStorage();
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: readTokenFromStorage(),
-  isLoading: false,
+  token: initialToken,
+  isLoading: Boolean(initialToken),
 
   login: async (login, password) => {
     set({ isLoading: true });
@@ -73,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuth: async () => {
     const stored = readTokenFromStorage();
     if (!stored) {
-      set({ user: null, token: null });
+      set({ user: null, token: null, isLoading: false });
       return;
     }
     set({ token: stored, isLoading: true });

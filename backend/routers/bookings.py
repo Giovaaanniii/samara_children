@@ -10,7 +10,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from auth import get_current_user
+from auth import get_current_admin, get_current_user
+from booking_period import aware_utc, booking_created_at_window
 from config import settings
 from database import get_db
 from models import (
@@ -261,6 +262,60 @@ async def list_my_bookings(
     return out
 
 
+@router.get("/admin/all", response_model=list[BookingResponse])
+async def list_all_bookings_admin(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(get_current_admin)],
+    booking_status: Annotated[
+        BookingStatus | None,
+        Query(alias="status", description="Фильтр по статусу бронирования"),
+    ] = None,
+    created_from: Annotated[
+        datetime | None,
+        Query(description="Начало периода по дате создания бронирования (включительно)"),
+    ] = None,
+    created_to: Annotated[
+        datetime | None,
+        Query(description="Конец периода по дате создания бронирования (включительно)"),
+    ] = None,
+) -> list[BookingResponse]:
+    if created_from is not None and created_to is not None:
+        if aware_utc(created_from) > aware_utc(created_to):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="created_from не может быть позже created_to",
+            )
+
+    window = booking_created_at_window(created_from, created_to)
+    q = (
+        select(Booking)
+        .options(selectinload(Booking.schedule).selectinload(Schedule.event))
+        .order_by(Booking.created_at.desc())
+    )
+    if booking_status is not None:
+        q = q.where(Booking.status == booking_status)
+    if window is not None:
+        q = q.where(window)
+    result = await db.execute(q)
+    rows = result.scalars().all()
+    out: list[BookingResponse] = []
+    for b in rows:
+        ev_title: str | None = None
+        sch_start: datetime | None = None
+        if b.schedule is not None:
+            sch_start = b.schedule.start_datetime
+            if b.schedule.event is not None:
+                ev_title = b.schedule.event.title
+        out.append(
+            _booking_to_response(
+                b,
+                event_title=ev_title,
+                schedule_start_datetime=sch_start,
+            ),
+        )
+    return out
+
+
 @router.get("/{booking_id}", response_model=BookingDetailResponse)
 async def get_booking(
     booking_id: int,
@@ -374,7 +429,8 @@ async def cancel_booking(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Нельзя отменить завершённое бронирование",
         )
-    _assert_may_cancel_by_time(schedule)
+    if current_user.role != UserRole.admin:
+        _assert_may_cancel_by_time(schedule)
 
     refund_id: str | None = None
     refund_initiated = False
@@ -477,4 +533,50 @@ async def cancel_booking(
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Текущий статус бронирования не допускает отмену",
+    )
+
+
+@router.post("/{booking_id}/confirm", response_model=BookingResponse)
+async def admin_confirm_booking(
+    booking_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(get_current_admin)],
+) -> BookingResponse:
+    result = await db.execute(
+        select(Booking)
+        .options(selectinload(Booking.schedule).selectinload(Schedule.event))
+        .where(Booking.id == booking_id),
+    )
+    booking = result.scalar_one_or_none()
+    if booking is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено",
+        )
+    if booking.status == BookingStatus.cancelled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Нельзя подтвердить отменённое бронирование",
+        )
+    if booking.status == BookingStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Бронирование уже завершено",
+        )
+    if booking.status != BookingStatus.confirmed:
+        booking.status = BookingStatus.confirmed
+        booking.confirmed_at = datetime.now(timezone.utc)
+        await db.commit()
+        await db.refresh(booking)
+
+    ev_title: str | None = None
+    sch_start: datetime | None = None
+    if booking.schedule is not None:
+        sch_start = booking.schedule.start_datetime
+        if booking.schedule.event is not None:
+            ev_title = booking.schedule.event.title
+    return _booking_to_response(
+        booking,
+        event_title=ev_title,
+        schedule_start_datetime=sch_start,
     )

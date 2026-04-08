@@ -79,6 +79,21 @@ export interface EventRecord {
   updated_at: string;
 }
 
+export interface EventCreatePayload {
+  title: string;
+  description?: string | null;
+  category: EventCategory;
+  target_audience?: string | null;
+  duration_minutes?: number | null;
+  max_participants?: number | null;
+  base_price: string;
+  status?: EventStatus;
+  meeting_point?: string | null;
+  cover_image_url?: string | null;
+}
+
+export type EventUpdatePayload = Partial<EventCreatePayload>;
+
 export interface Schedule {
   id: number;
   event_id: number;
@@ -88,6 +103,46 @@ export interface Schedule {
   status: ScheduleStatus;
   guide_id: number | null;
 }
+
+export interface ScheduleCreatePayload {
+  event_id: number;
+  start_datetime: string;
+  end_datetime: string;
+  available_slots: number;
+  status: ScheduleStatus;
+  guide_id?: number | null;
+}
+
+export type ScheduleUpdatePayload = Partial<
+  Omit<ScheduleCreatePayload, "event_id">
+>;
+
+export interface Guide {
+  id: number;
+  first_name: string;
+  last_name: string;
+  patronymic: string | null;
+  phone: string | null;
+  email: string | null;
+  photo_url: string | null;
+  specialization: string | null;
+  hire_date: string | null;
+  is_active: boolean;
+}
+
+export interface GuideCreatePayload {
+  first_name: string;
+  last_name: string;
+  patronymic?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  photo_url?: string | null;
+  specialization?: string | null;
+  hire_date?: string | null;
+  is_active?: boolean;
+}
+
+export type GuideUpdatePayload = Partial<GuideCreatePayload>;
 
 /** Публичный ответ GET /schedules/:id для страницы бронирования */
 export interface ScheduleBookingInfo {
@@ -198,4 +253,25 @@ export interface BookingCancelResponse {
   refund_id?: string | null;
   refund_initiated?: boolean;
   message?: string | null;
+}
+
+export interface SalesSummary {
+  bookings_total: number;
+  paid_bookings: number;
+  revenue_total: string;
+  period_from?: string | null;
+  period_to?: string | null;
+}
+
+export interface PopularEventPoint {
+  event_id: number;
+  event_title: string;
+  bookings_count: number;
+  participants_count: number;
+  revenue: string;
+}
+
+export interface AdminReports {
+  sales: SalesSummary;
+  popular_events: PopularEventPoint[];
 }

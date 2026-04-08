@@ -1,0 +1,20 @@
+/* --- Таблица «Цифры» --- */
+
+.numbersTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.eventTitleCell {
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #2a1f1f;
+}
+
+.numbersTableWrap :global(.ant-table-thead > tr > th) {
+  font-weight: 600;
+}

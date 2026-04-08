@@ -1,5 +1,4 @@
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
-import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../../store/authStore";
@@ -41,6 +40,11 @@ export default function Header() {
           <Link to="/events" className={styles.navLink}>
             Мероприятия
           </Link>
+          {user?.role === "admin" ? (
+            <Link to="/admin/events" className={styles.navLink}>
+              Админка
+            </Link>
+          ) : null}
         </nav>
 
         <div className={styles.actions}>
@@ -50,17 +54,13 @@ export default function Header() {
               <span className={styles.userName} title={user.email}>
                 {displayName}
               </span>
-              <Link to="/profile" className={styles.loginLink}>
+              <Link to="/profile" className={styles.headerAction}>
                 Личный кабинет
               </Link>
-              <Button
-                type="default"
-                className={styles.logoutBtn}
-                icon={<LogoutOutlined />}
-                onClick={onLogout}
-              >
+              <button type="button" className={styles.headerAction} onClick={onLogout}>
+                <LogoutOutlined aria-hidden />
                 Выйти
-              </Button>
+              </button>
             </>
           ) : (
             <>

@@ -15,6 +15,8 @@ import "./App.css";
 import { useAuthStore } from "./store/authStore";
 import Footer from "./components/Footer";
 import Header from "./components/Header/Header";
+import AdminRoute from "./components/routes/AdminRoute";
+import PrivateRoute from "./components/routes/PrivateRoute";
 import AdminPages from "./pages/AdminPages";
 import BookingPage from "./pages/BookingPage";
 import EventDetailPage from "./pages/EventDetailPage";
@@ -61,25 +63,36 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <Header />
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="/events/:id" element={<EventDetailPage />} />
-          <Route
-            path="/events/:id/booking"
-            element={<LegacyEventBookingRedirect />}
-          />
-          <Route path="/book/:scheduleId" element={<BookingPage />} />
-          <Route path="/payment/return" element={<PaymentReturnPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin" element={<AdminPages />} />
-        </Routes>
-      </main>
-      <Footer />
+      <div className="app-shell">
+        <Header />
+        <main className="app-main">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route
+              path="/events/:id/booking"
+              element={<LegacyEventBookingRedirect />}
+            />
+            <Route path="/book/:scheduleId" element={<BookingPage />} />
+            <Route path="/payment/return" element={<PaymentReturnPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route
+              path="/admin/*"
+              element={
+                <PrivateRoute>
+                  <AdminRoute>
+                    <AdminPages />
+                  </AdminRoute>
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }

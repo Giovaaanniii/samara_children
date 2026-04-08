@@ -305,6 +305,33 @@ class BookingCancelResponse(BaseModel):
     message: str | None = None
 
 
+class SalesSummaryResponse(BaseModel):
+    bookings_total: int
+    paid_bookings: int
+    revenue_total: Decimal
+    period_from: datetime | None = Field(
+        None,
+        description="Начало применённого периода (дата создания бронирования), если задано в запросе",
+    )
+    period_to: datetime | None = Field(
+        None,
+        description="Конец применённого периода (дата создания бронирования), если задано в запросе",
+    )
+
+
+class PopularEventPoint(BaseModel):
+    event_id: int
+    event_title: str
+    bookings_count: int
+    participants_count: int
+    revenue: Decimal
+
+
+class AdminReportsResponse(BaseModel):
+    sales: SalesSummaryResponse
+    popular_events: list[PopularEventPoint]
+
+
 class ReviewCreate(BaseModel):
     event_id: int = Field(..., ge=1)
     booking_id: int = Field(..., ge=1)

@@ -1,5 +1,5 @@
 import { HeartFilled } from "@ant-design/icons";
-import { Button, Typography } from "antd";
+import { Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
@@ -30,9 +30,9 @@ export default function Footer() {
           {user ? (
             <>
               <Link to="/profile">Личный кабинет</Link>
-              <Button type="link" className={styles.footerLogout} onClick={onLogout}>
+              <button type="button" className={styles.footerLinkBtn} onClick={onLogout}>
                 Выйти
-              </Button>
+              </button>
             </>
           ) : (
             <>
