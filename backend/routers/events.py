@@ -10,15 +10,15 @@ from sqlalchemy.orm import selectinload
 
 from auth import get_current_admin
 from database import get_db
-from models import Event, EventCategory, EventStatus, Schedule, User
+from models import Event, EventCategory, EventStatus, Review, Schedule, User
 from schemas import (
     EventCreate,
     EventDetailResponse,
     EventListResponse,
     EventResponse,
     EventUpdate,
-    ReviewResponse,
     ScheduleResponse,
+    review_to_response,
 )
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -105,7 +105,7 @@ async def get_event(
         .where(Event.id == event_id)
         .options(
             selectinload(Event.schedules),
-            selectinload(Event.reviews),
+            selectinload(Event.reviews).selectinload(Review.user),
         )
     )
     result = await db.execute(stmt)
@@ -123,7 +123,7 @@ async def get_event(
     return EventDetailResponse(
         **base.model_dump(mode="python"),
         schedules=[ScheduleResponse.model_validate(s) for s in schedules],
-        reviews=[ReviewResponse.model_validate(r) for r in published],
+        reviews=[review_to_response(r, r.user) for r in published],
     )
 
 

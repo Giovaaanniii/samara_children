@@ -31,6 +31,7 @@ from schemas import (
     BookingCreate,
     BookingDetailResponse,
     BookingResponse,
+    BookingStatusSnapshotResponse,
     EventBookingInfoResponse,
     ParticipantResponse,
     ScheduleBriefResponse,
@@ -49,11 +50,11 @@ router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 
 def _payment_return_url_with_booking(booking_id: int) -> str:
-    """Добавляет booking_id к PAYMENT_RETURN_URL для страницы подтверждения на фронте."""
+    """Добавляет bookingId к PAYMENT_RETURN_URL для страницы подтверждения на фронте."""
     base = settings.PAYMENT_RETURN_URL.rstrip("/")
     parts = urlparse(base)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    query["booking_id"] = str(booking_id)
+    query["bookingId"] = str(booking_id)
     new_query = urlencode(query)
     return urlunparse(
         (
@@ -314,6 +315,32 @@ async def list_all_bookings_admin(
             ),
         )
     return out
+
+
+@router.get("/{booking_id}/status", response_model=BookingStatusSnapshotResponse)
+async def get_booking_status(
+    booking_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> BookingStatusSnapshotResponse:
+    """Статус бронирования без тяжёлых связей — для опроса после возврата с ЮKassa."""
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if booking is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено",
+        )
+    if not _can_access_booking(current_user, booking):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нет доступа к этому бронированию",
+        )
+    return BookingStatusSnapshotResponse(
+        id=booking.id,
+        status=booking.status,
+        confirmed_at=booking.confirmed_at,
+    )
 
 
 @router.get("/{booking_id}", response_model=BookingDetailResponse)

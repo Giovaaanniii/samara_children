@@ -161,11 +161,35 @@ export interface Review {
   user_id: number;
   event_id: number;
   booking_id: number;
+  /** Целое среднее по критериям (1–5), для совместимости */
   rating: number;
+  /** Среднее по критериям — для отображения звёзд (половинки) */
+  average_rating: number;
   comment: string | null;
   guide_rating: number | null;
+  engagement_rating: number | null;
+  organization_rating: number | null;
   created_at: string;
   is_published: boolean;
+  author_name?: string | null;
+}
+
+export interface ReviewCreatePayload {
+  event_id: number;
+  booking_id: number;
+  guide_rating: number;
+  engagement_rating: number;
+  organization_rating: number;
+  comment?: string | null;
+}
+
+export interface EligibleBookingReviewItem {
+  booking_id: number;
+  schedule_end: string;
+}
+
+export interface ReviewAdminItem extends Review {
+  event_title: string;
 }
 
 export interface EventDetail extends EventRecord {
@@ -212,6 +236,13 @@ export interface BookingResponse {
   /** Список «Мои бронирования» */
   event_title?: string | null;
   schedule_start_datetime?: string | null;
+}
+
+/** GET /bookings/:id/status — лёгкий ответ для опроса после ЮKassa */
+export interface BookingStatusSnapshot {
+  id: number;
+  status: BookingStatus;
+  confirmed_at: string | null;
 }
 
 export interface Participant {

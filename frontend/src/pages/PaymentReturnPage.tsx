@@ -1,6 +1,6 @@
 import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Alert, Card, Spin, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { bookingsApi } from "../services/bookingsApi";
@@ -11,15 +11,25 @@ import { getApiErrorDetail } from "../utils/apiError";
 
 const { Title, Text } = Typography;
 
+const POLL_MS = 2500;
+const MAX_POLLS = 48;
+
+function parseBookingId(params: URLSearchParams): number {
+  const raw = params.get("bookingId") ?? params.get("booking_id");
+  if (!raw) return NaN;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 1 ? n : NaN;
+}
+
 export default function PaymentReturnPage() {
   const [params] = useSearchParams();
-  const bookingIdRaw = params.get("booking_id");
-  const bookingId = bookingIdRaw ? Number(bookingIdRaw) : NaN;
+  const bookingId = useMemo(() => parseBookingId(params), [params]);
   const token = useAuthStore((s) => s.token);
 
   const [detail, setDetail] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(bookingId) || bookingId < 1) {
@@ -34,16 +44,58 @@ export default function PaymentReturnPage() {
     }
 
     let cancelled = false;
+
     (async () => {
+      setError(null);
+      setPollTimedOut(false);
+      setLoading(true);
+      setDetail(null);
+
       try {
+        let polls = 0;
+        while (!cancelled && polls < MAX_POLLS) {
+          const { data: snap } = await bookingsApi.getStatus(bookingId);
+          if (cancelled) return;
+
+          if (snap.status !== "pending") {
+            const { data } = await bookingsApi.getById(bookingId);
+            if (!cancelled) {
+              setDetail(data);
+              setLoading(false);
+            }
+            return;
+          }
+
+          polls += 1;
+          if (polls >= MAX_POLLS) break;
+
+          await new Promise<void>((resolve) => {
+            setTimeout(resolve, POLL_MS);
+          });
+        }
+
+        if (cancelled) return;
+
+        const { data: snap } = await bookingsApi.getStatus(bookingId);
+        if (cancelled) return;
+
+        if (snap.status === "pending") {
+          setPollTimedOut(true);
+        }
+
         const { data } = await bookingsApi.getById(bookingId);
-        if (!cancelled) setDetail(data);
+        if (!cancelled) {
+          setDetail(data);
+          setLoading(false);
+        }
       } catch (e) {
-        if (!cancelled) setError(getApiErrorDetail(e));
-      } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setError(getApiErrorDetail(e));
+          setLoading(false);
+        }
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -54,17 +106,18 @@ export default function PaymentReturnPage() {
       <div style={{ textAlign: "center", padding: 48 }}>
         <Spin size="large" indicator={<LoadingOutlined spin />} />
         <div style={{ marginTop: 16 }}>
-          <Text type="secondary">Проверяем статус бронирования…</Text>
+          <Text type="secondary">Проверяем статус оплаты…</Text>
         </div>
       </div>
     );
   }
 
   if (error && !detail) {
-    const loginHref =
+    const qs =
       Number.isFinite(bookingId) && bookingId >= 1
-        ? `/login?redirect=${encodeURIComponent(`/payment/return?booking_id=${bookingId}`)}`
-        : "/login";
+        ? `?bookingId=${bookingId}`
+        : "";
+    const loginHref = `/login?redirect=${encodeURIComponent(`/payment/success${qs}`)}`;
     return (
       <div style={{ padding: 24, maxWidth: 560, margin: "0 auto" }}>
         <Alert type="error" message={error} showIcon />
@@ -90,6 +143,16 @@ export default function PaymentReturnPage() {
   return (
     <div style={{ padding: "32px 20px 56px", maxWidth: 560, margin: "0 auto" }}>
       <Card>
+        {pollTimedOut && pending ? (
+          <Alert
+            style={{ marginBottom: 16 }}
+            type="info"
+            showIcon
+            message="Подтверждение оплаты задерживается"
+            description="Статус обновится автоматически после обработки платежа в ЮKassa. Проверьте бронирование в личном кабинете чуть позже."
+          />
+        ) : null}
+
         {ok ? (
           <>
             <Title level={3} style={{ marginTop: 0 }}>

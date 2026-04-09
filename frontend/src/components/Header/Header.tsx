@@ -1,6 +1,7 @@
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 
+import BrandLogo from "../BrandLogo";
 import { useAuthStore } from "../../store/authStore";
 
 import styles from "./Header.module.css";
@@ -24,8 +25,8 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.inner}>
         <Link to="/" className={styles.brand}>
-          <div className={styles.logoSlot} title="Загрузите логотип в /src/assets/">
-            <span className={styles.logoHint}>логотип</span>
+          <div className={styles.logoSlot}>
+            <BrandLogo className={styles.logoImg} alt="" width={52} height={52} />
           </div>
           <div className={styles.brandText}>
             <span className={styles.brandTitle}>Самара</span>

@@ -21,11 +21,6 @@
   font-size: 15px;
 }
 
-.heart {
-  color: #ff6b6b;
-  margin-left: 4px;
-}
-
 .links {
   display: flex;
   gap: 20px;

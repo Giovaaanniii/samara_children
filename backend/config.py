@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: str = ""
     YOOKASSA_SECRET_KEY: str = ""
     # URL возврата пользователя после оплаты (redirect)
-    PAYMENT_RETURN_URL: str = "http://localhost:5173/payment/return"
+    PAYMENT_RETURN_URL: str = "http://localhost:5173/payment/success"
     # Отмена: не позже чем за N часов до начала сеанса
     BOOKING_CANCEL_MIN_HOURS_BEFORE_EVENT: int = 24
     # Автовозврат на карту через ЮKassa при отмене оплаченного бронирования

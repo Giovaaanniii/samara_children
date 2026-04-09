@@ -25,17 +25,43 @@
 2. Откройте `.env` и задайте как минимум `SECRET_KEY`; при локальном запуске — корректные `DATABASE_URL` и `REDIS_URL` под ваши службы.
 3. Файл `.env` не коммитится; подробности полей — в `.env.example`.
 
-## Миграции базы данных (Alembic)
+## Миграции базы данных
 
-Конфигурация: `alembic.ini`, скрипты — в каталоге `alembic/`, ревизии — в `alembic/versions/`. Переменная `DATABASE_URL` в `.env` должна указывать на ту же БД, что и у приложения (для async — `postgresql+asyncpg://...`).
+### Docker (проще всего)
 
-Из **корня репозитория** (где лежит `alembic.ini`), с активированным venv и установленными зависимостями из `requirements.txt`:
+Бэкенд при **каждом старте** применяет недостающие изменения схемы (см. `backend/main.py`, lifespan): например, колонка `reviews.engagement_rating` добавляется через `ALTER TABLE ... IF NOT EXISTS`. Достаточно пересобрать и запустить стек:
+
+```bash
+docker compose up --build
+```
+
+Отдельно гонять SQL не обязательно, если поднимается актуальный код бэкенда.
+
+### Ручной SQL в контейнере PostgreSQL
+
+Если нужно применить скрипт из `backend/migrations/` вручную (имя сервиса и учётные данные возьмите из своего `docker-compose.yml` и `.env`; ниже — типичные `postgres`, пользователь и БД из `.env.example`):
+
+```bash
+docker compose exec -T postgres psql -U samara -d samara_children -f - < backend/migrations/add_review_engagement_rating.sql
+```
+
+Или одной командой:
+
+```bash
+docker compose exec postgres psql -U samara -d samara_children -c "ALTER TABLE reviews ADD COLUMN IF NOT EXISTS engagement_rating INTEGER; UPDATE reviews SET engagement_rating = rating WHERE engagement_rating IS NULL;"
+```
+
+Убедитесь, что контейнер с PostgreSQL уже запущен (`docker compose up -d postgres` или полный compose).
+
+### Alembic (если настроен в проекте)
+
+Если в корне репозитория есть `alembic.ini` и каталог `alembic/`, переменная `DATABASE_URL` в `.env` должна указывать на ту же БД (для async — `postgresql+asyncpg://...`). Из корня, с venv и установленным `requirements.txt`:
 
 ```bash
 alembic upgrade head
 ```
 
-Создать новую миграцию по изменениям моделей:
+Новая ревизия по моделям:
 
 ```bash
 alembic revision --autogenerate -m "описание"

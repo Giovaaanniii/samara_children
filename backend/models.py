@@ -297,6 +297,10 @@ class Review(Base):
     rating: Mapped[int] = mapped_column(Integer)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     guide_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Вовлечённость (1–5); у старых записей может быть NULL
+    engagement_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Организация мероприятия (1–5); у старых записей может быть NULL
+    organization_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

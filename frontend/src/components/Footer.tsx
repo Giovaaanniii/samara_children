@@ -1,4 +1,3 @@
-import { HeartFilled } from "@ant-design/icons";
 import { Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -21,10 +20,7 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
-        <Text className={styles.tagline}>
-          Самара детям — экскурсионное бюро{" "}
-          <HeartFilled className={styles.heart} />
-        </Text>
+        <Text className={styles.tagline}>Самара детям — экскурсионное бюро</Text>
         <div className={styles.links}>
           <Link to="/events">Каталог</Link>
           {user ? (
@@ -40,6 +36,8 @@ export default function Footer() {
               <Link to="/login">Войти</Link>
             </>
           )}
+          <Link to="/offer">Договор оферты</Link>
+          <Link to="/privacy">Политика конфиденциальности</Link>
         </div>
         <Text type="secondary" className={styles.copy}>
           © {new Date().getFullYear()}

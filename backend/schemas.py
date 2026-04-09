@@ -9,7 +9,9 @@ from models import (
     BookingStatus,
     EventCategory,
     EventStatus,
+    Review,
     ScheduleStatus,
+    User,
     UserRole,
 )
 
@@ -291,6 +293,16 @@ class ScheduleBriefResponse(BaseModel):
     status: ScheduleStatus
 
 
+class BookingStatusSnapshotResponse(BaseModel):
+    """Лёгкий ответ для опроса статуса после редиректа с оплаты."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    status: BookingStatus
+    confirmed_at: datetime | None
+
+
 class BookingDetailResponse(BookingResponse):
     participants: list[ParticipantResponse]
     event: EventBookingInfoResponse
@@ -335,29 +347,88 @@ class AdminReportsResponse(BaseModel):
 class ReviewCreate(BaseModel):
     event_id: int = Field(..., ge=1)
     booking_id: int = Field(..., ge=1)
-    rating: int = Field(..., ge=1, le=5)
+    guide_rating: int = Field(..., ge=1, le=5, description="Работа гида")
+    engagement_rating: int = Field(..., ge=1, le=5, description="Вовлечённость")
+    organization_rating: int = Field(..., ge=1, le=5, description="Организация")
     comment: str | None = None
-    guide_rating: int | None = Field(None, ge=1, le=5)
 
 
 class ReviewUpdate(BaseModel):
-    rating: int | None = Field(None, ge=1, le=5)
-    comment: str | None = None
     guide_rating: int | None = Field(None, ge=1, le=5)
+    engagement_rating: int | None = Field(None, ge=1, le=5)
+    organization_rating: int | None = Field(None, ge=1, le=5)
+    comment: str | None = None
 
 
 class ReviewResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Отзыв: rating — целое среднее (1–5), average_rating — среднее по критериям (для звёзд)."""
 
     id: int
     user_id: int
     event_id: int
     booking_id: int
     rating: int
+    average_rating: float = Field(
+        ...,
+        description="Среднее по критериям (половинки звёзд)",
+    )
     comment: str | None
     guide_rating: int | None
+    engagement_rating: int | None
+    organization_rating: int | None = None
     created_at: datetime
     is_published: bool
+    author_name: str | None = None
+
+
+def review_to_response(review: Review, author: User | None = None) -> ReviewResponse:
+    g = review.guide_rating
+    e = review.engagement_rating
+    o = review.organization_rating
+    parts = [x for x in (g, e, o) if x is not None]
+    if parts:
+        avg = sum(parts) / len(parts)
+    else:
+        avg = float(review.rating)
+    author_name: str | None = None
+    if author is not None:
+        if author.first_name and author.last_name:
+            author_name = f"{author.first_name} {author.last_name[0]}."
+        elif author.first_name:
+            author_name = author.first_name
+        else:
+            author_name = author.login
+    return ReviewResponse(
+        id=review.id,
+        user_id=review.user_id,
+        event_id=review.event_id,
+        booking_id=review.booking_id,
+        rating=review.rating,
+        average_rating=avg,
+        guide_rating=g,
+        engagement_rating=e,
+        organization_rating=o,
+        comment=review.comment,
+        created_at=review.created_at,
+        is_published=review.is_published,
+        author_name=author_name,
+    )
+
+
+def compute_review_stored_rating(*scores: int) -> int:
+    """Целое среднее 1–5 для поля rating в БД по одному или нескольким критериям."""
+    if not scores:
+        return 1
+    return max(1, min(5, int(round(sum(scores) / len(scores)))))
+
+
+class EligibleBookingReviewItem(BaseModel):
+    booking_id: int
+    schedule_end: datetime
+
+
+class ReviewAdminItem(ReviewResponse):
+    event_title: str
 
 
 class EventDetailResponse(EventResponse):

@@ -1,10 +1,13 @@
 import time
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from config import settings
+from database import engine
 from routers import api_router
 from routers.auth import router as auth_router
 from routers.events import router as events_router
@@ -15,6 +18,34 @@ from routers.bookings import router as bookings_router
 from routers.payments import router as payments_router
 from routers.reports import router as reports_router
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Подтягивает схему БД без ручного SQL (колонки критериев у reviews)."""
+    async with engine.begin() as conn:
+        await conn.execute(
+            text(
+                "ALTER TABLE reviews ADD COLUMN IF NOT EXISTS engagement_rating INTEGER",
+            ),
+        )
+        await conn.execute(
+            text(
+                "UPDATE reviews SET engagement_rating = rating WHERE engagement_rating IS NULL",
+            ),
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE reviews ADD COLUMN IF NOT EXISTS organization_rating INTEGER",
+            ),
+        )
+        await conn.execute(
+            text(
+                "UPDATE reviews SET organization_rating = rating WHERE organization_rating IS NULL",
+            ),
+        )
+    yield
+
+
 app = FastAPI(
     title="Самара Детям API",
     description="Информационно-сервисная платформа экскурсионного бюро",
@@ -22,6 +53,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # allow_origin_regex — любой порт localhost (Docker :3000, Vite :5173 и т.д.);

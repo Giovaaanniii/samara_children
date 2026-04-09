@@ -1,4 +1,10 @@
-import { BarChartOutlined, CalendarOutlined, ProfileOutlined, TeamOutlined } from "@ant-design/icons";
+import {
+  BarChartOutlined,
+  CalendarOutlined,
+  CommentOutlined,
+  ProfileOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import { Layout, Menu, Typography } from "antd";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
@@ -7,6 +13,7 @@ import AdminEventsCreatePage from "./AdminEventsCreatePage";
 import AdminEventsPage from "./AdminEventsPage";
 import AdminGuidesPage from "./AdminGuidesPage";
 import AdminReportsPage from "./AdminReportsPage";
+import AdminReviewsPage from "./AdminReviewsPage";
 import AdminSchedulesPage from "./AdminSchedulesPage";
 
 const { Sider, Content } = Layout;
@@ -21,6 +28,7 @@ export default function AdminPages() {
     "/admin/guides",
     "/admin/bookings",
     "/admin/reports",
+    "/admin/reviews",
   ];
   const selected =
     adminPrefixes.find((k) => pathname === k || pathname.startsWith(`${k}/`)) ||
@@ -42,6 +50,7 @@ export default function AdminPages() {
             { key: "/admin/guides", icon: <TeamOutlined />, label: <Link to="/admin/guides">Гиды</Link> },
             { key: "/admin/bookings", icon: <ProfileOutlined />, label: <Link to="/admin/bookings">Бронирования</Link> },
             { key: "/admin/reports", icon: <BarChartOutlined />, label: <Link to="/admin/reports">Отчёты</Link> },
+            { key: "/admin/reviews", icon: <CommentOutlined />, label: <Link to="/admin/reviews">Отзывы</Link> },
           ]}
         />
       </Sider>
@@ -54,6 +63,7 @@ export default function AdminPages() {
           <Route path="guides" element={<AdminGuidesPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="reports" element={<AdminReportsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
         </Routes>
       </Content>
     </Layout>

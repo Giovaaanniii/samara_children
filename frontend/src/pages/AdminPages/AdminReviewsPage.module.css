@@ -1,0 +1,62 @@
+/* Звёзды в таблице не переносятся на «лесенку» */
+.starsLine {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.compactRate {
+  font-size: 14px !important;
+}
+
+.overallBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 108px;
+}
+
+.scoreHint {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.critBlock {
+  min-width: 248px;
+}
+
+.critRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.critRow:last-child {
+  margin-bottom: 0;
+}
+
+.critLabel {
+  flex: 0 0 104px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.critStars {
+  flex: 0 0 auto;
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+
+/* Ant Design: убираем лишние отступы между звёздами, чтобы строка не ломалась */
+.critStars :global(.ant-rate-star:not(:last-child)) {
+  margin-inline-end: 2px;
+}
+
+.compactRate :global(.ant-rate-star:not(:last-child)) {
+  margin-inline-end: 2px;
+}

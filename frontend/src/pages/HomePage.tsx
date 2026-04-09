@@ -7,6 +7,7 @@ import { Button, Col, Input, Row, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import BrandLogo from "../components/BrandLogo";
 import { EventCard } from "../components/EventCard";
 import { eventsApi } from "../services/eventsApi";
 import type { EventRecord } from "../types";
@@ -57,10 +58,13 @@ export default function HomePage() {
               мастер-классы — яркие впечатления и безопасный досуг.
             </p>
           </div>
-          <div className={styles.logoSlot}>
-            Место для логотипа
-            <br />
-            вашей компании
+          <div className={styles.heroLogo}>
+            <BrandLogo
+              className={styles.heroLogoImg}
+              alt="Самара детям"
+              pngSrc="/logo2.png"
+              fallbackSrc="/logo.png"
+            />
           </div>
         </div>
       </section>

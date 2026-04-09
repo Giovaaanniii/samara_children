@@ -40,3 +40,91 @@
   margin-bottom: 12px;
   border-radius: 10px;
 }
+
+.reviewHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reviewDate {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Итоговая оценка в карточке отзыва */
+.reviewOverallBlock {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff8f6 0%, #fff0ee 100%);
+  border: 1px solid rgba(184, 50, 50, 0.18);
+}
+
+.reviewOverallLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a2a2a;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.reviewOverallStars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.reviewOverallRate {
+  font-size: 22px !important;
+}
+
+.reviewOverallValue {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.reviewCriteria {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reviewCriterionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 13px;
+}
+
+.criterionLabel {
+  min-width: 140px;
+  color: #6b4a4a;
+}
+
+/* Форма: превью итоговой оценки */
+.reviewFormPreview {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff8f6 0%, #fff0ee 100%);
+  border: 1px solid rgba(184, 50, 50, 0.2);
+}
+
+.reviewFormPreviewTitle {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a2a2a;
+  margin-bottom: 8px;
+}
+
+.reviewFormPreviewStars {
+  font-size: 24px !important;
+}
