@@ -29,6 +29,7 @@ class Base(DeclarativeBase):
 class UserRole(str, PyEnum):
     client = "client"
     admin = "admin"
+    guide = "guide"
 
 
 class EventCategory(str, PyEnum):
@@ -48,6 +49,13 @@ class ScheduleStatus(str, PyEnum):
     closed = "closed"
     cancelled = "cancelled"
     completed = "completed"
+
+
+class GuideAvailabilityStatus(str, PyEnum):
+    active = "active"
+    busy = "busy"
+    vacation = "vacation"
+    sick = "sick"
 
 
 class BookingStatus(str, PyEnum):
@@ -95,6 +103,11 @@ class User(Base):
     patronymic: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    guide_id: Mapped[int | None] = mapped_column(
+        ForeignKey("guides.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -116,6 +129,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    guide_profile: Mapped[Guide | None] = relationship(
+        back_populates="user_account",
+        foreign_keys=[guide_id],
+    )
 
 
 class Guide(Base):
@@ -131,8 +148,32 @@ class Guide(Base):
     specialization: Mapped[str | None] = mapped_column(String(512), nullable=True)
     hire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    availability_status: Mapped[GuideAvailabilityStatus] = mapped_column(
+        Enum(
+            GuideAvailabilityStatus,
+            name="guide_availability_status",
+            native_enum=False,
+            validate_strings=True,
+        ),
+        default=GuideAvailabilityStatus.active,
+    )
 
-    schedules: Mapped[list[Schedule]] = relationship(back_populates="guide")
+    schedules: Mapped[list[Schedule]] = relationship(
+        back_populates="guide",
+        foreign_keys="Schedule.guide_id",
+    )
+    user_account: Mapped[User | None] = relationship(
+        back_populates="guide_profile",
+        foreign_keys=[User.guide_id],
+    )
+    salary_events: Mapped[list[GuideSalaryEvent]] = relationship(
+        back_populates="guide",
+        cascade="all, delete-orphan",
+    )
+    chat_messages: Mapped[list[GuideChatMessage]] = relationship(
+        back_populates="guide",
+        cascade="all, delete-orphan",
+    )
 
 
 class Event(Base):
@@ -190,12 +231,37 @@ class Schedule(Base):
         ForeignKey("guides.id", ondelete="SET NULL"),
         nullable=True,
     )
+    # Кто отказался от сеанса (сохраняется при снятии guide_id с сеанса)
+    rejected_by_guide_id: Mapped[int | None] = mapped_column(
+        ForeignKey("guides.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    guide_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    guide_rejected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    guide_reject_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    guide_completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     event: Mapped[Event] = relationship(back_populates="schedules")
-    guide: Mapped[Guide | None] = relationship(back_populates="schedules")
+    guide: Mapped[Guide | None] = relationship(
+        back_populates="schedules",
+        foreign_keys=lambda: [Schedule.guide_id],
+    )
     bookings: Mapped[list[Booking]] = relationship(
         back_populates="schedule",
         cascade="all, delete-orphan",
+    )
+    salary_event: Mapped[GuideSalaryEvent | None] = relationship(
+        back_populates="schedule",
+        uselist=False,
     )
 
 
@@ -323,3 +389,41 @@ class Settings(Base):
         default=SettingDataType.string,
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class GuideSalaryEvent(Base):
+    __tablename__ = "guide_salary_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    guide_id: Mapped[int] = mapped_column(ForeignKey("guides.id", ondelete="CASCADE"))
+    schedule_id: Mapped[int] = mapped_column(
+        ForeignKey("schedules.id", ondelete="CASCADE"),
+        unique=True,
+    )
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    guide: Mapped[Guide] = relationship(back_populates="salary_events")
+    schedule: Mapped[Schedule] = relationship(back_populates="salary_event")
+
+
+class GuideChatMessage(Base):
+    __tablename__ = "guide_chat_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    guide_id: Mapped[int] = mapped_column(ForeignKey("guides.id", ondelete="CASCADE"))
+    admin_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    sender_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+    )
+    message: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    guide: Mapped[Guide] = relationship(back_populates="chat_messages")

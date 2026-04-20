@@ -17,6 +17,7 @@ from config import settings
 from database import get_db
 from models import User, UserRole
 from schemas import LoginRequest, Token, UserCreate, UserResponse, UserUpdate
+from services.guide_account import ensure_guide_profile
 
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
@@ -86,6 +87,8 @@ async def login(
         )
     user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
+    await db.refresh(user)
+    user = await ensure_guide_profile(db, user)
     token = create_access_token(
         {"sub": str(user.id)},
         timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),

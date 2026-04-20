@@ -16,7 +16,10 @@ from schemas import (
     ScheduleResponse,
     ScheduleUpdate,
 )
-from services.schedule_notifications import notify_booking_users_schedule_changed
+from services.schedule_notifications import (
+    notify_booking_users_schedule_changed,
+    notify_guide_schedule_changed,
+)
 
 router = APIRouter(prefix="/schedules", tags=["Расписание"])
 
@@ -219,6 +222,13 @@ async def update_schedule(
     for key, val in payload.items():
         setattr(schedule, key, val)
 
+    if "guide_id" in payload and schedule.guide_id != old_guide:
+        schedule.guide_rejected_at = None
+        schedule.guide_reject_reason = None
+        schedule.rejected_by_guide_id = None
+        schedule.guide_confirmed_at = None
+        schedule.guide_completed_at = None
+
     await db.commit()
     await db.refresh(schedule)
 
@@ -231,6 +241,8 @@ async def update_schedule(
     )
     if relevant_change and await _count_bookings(db, schedule_id) > 0:
         await notify_booking_users_schedule_changed(db, schedule)
+    if relevant_change:
+        await notify_guide_schedule_changed(db, schedule)
 
     return schedule
 

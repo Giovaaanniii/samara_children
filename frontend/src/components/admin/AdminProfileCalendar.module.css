@@ -1,0 +1,41 @@
+.card {
+  margin-top: 24px;
+}
+
+.cellInner {
+  min-height: 52px;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.cellHasBooking {
+  background: rgba(184, 50, 50, 0.08);
+  border-radius: 6px;
+}
+
+.dayNum {
+  font-weight: 600;
+}
+
+.badge {
+  margin-top: 2px;
+}
+
+.hint {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.modalLead {
+  margin: 0 0 8px;
+}
+
+.bookingTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

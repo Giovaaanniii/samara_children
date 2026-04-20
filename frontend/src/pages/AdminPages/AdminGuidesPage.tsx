@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Modal, Popconfirm, Space, Switch, Table, Typography, message } from "antd";
+import { Button, Card, Form, Input, Modal, Popconfirm, Rate, Space, Switch, Table, Typography, message } from "antd";
 import { useEffect, useState } from "react";
 
 import { adminApi } from "../../services/adminApi";
@@ -120,6 +120,21 @@ export default function AdminGuidesPage() {
         columns={[
           { title: "Код", dataIndex: "id", width: 70 },
           { title: "ФИО", render: (_, r) => `${r.last_name} ${r.first_name}` },
+          {
+            title: "Рейтинг",
+            width: 200,
+            render: (_, r) =>
+              r.guide_reviews_count && r.average_guide_rating != null ? (
+                <span>
+                  <Rate disabled allowHalf value={r.average_guide_rating} />
+                  <span style={{ marginLeft: 8 }}>
+                    {r.average_guide_rating.toFixed(2)} ({r.guide_reviews_count})
+                  </span>
+                </span>
+              ) : (
+                "—"
+              ),
+          },
           { title: "Специализация", dataIndex: "specialization" },
           { title: "Телефон", dataIndex: "phone" },
           { title: "Эл. почта", dataIndex: "email" },

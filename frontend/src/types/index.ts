@@ -1,6 +1,6 @@
 /** Типы, согласованные с backend (Pydantic). */
 
-export type UserRole = "client" | "admin";
+export type UserRole = "client" | "admin" | "guide";
 
 export type BookingStatus =
   | "pending"
@@ -28,6 +28,8 @@ export interface User {
   patronymic: string | null;
   phone: string | null;
   avatar_url: string | null;
+  /** Связь с таблицей guides для роли guide */
+  guide_id: number | null;
   is_active: boolean;
   fcm_token?: string | null;
 }
@@ -128,6 +130,9 @@ export interface Guide {
   specialization: string | null;
   hire_date: string | null;
   is_active: boolean;
+  /** Средняя оценка гида из опубликованных отзывов (API /guides) */
+  average_guide_rating?: number | null;
+  guide_reviews_count?: number;
 }
 
 export interface GuideCreatePayload {
@@ -143,6 +148,58 @@ export interface GuideCreatePayload {
 }
 
 export type GuideUpdatePayload = Partial<GuideCreatePayload>;
+
+/** Элемент GET /guides/my/schedule */
+export interface GuideScheduleBookingBrief {
+  booking_id: number;
+  status: BookingStatus;
+  participants_count: number;
+}
+
+export interface GuideMyScheduleItem {
+  schedule_id: number;
+  event_id: number;
+  event_title: string;
+  start_datetime: string;
+  end_datetime: string;
+  schedule_status: ScheduleStatus;
+  participants_count: number;
+  guide_confirmed_at: string | null;
+  guide_rejected_at: string | null;
+  guide_reject_reason: string | null;
+  guide_completed_at: string | null;
+  bookings: GuideScheduleBookingBrief[];
+}
+
+export interface GuideScheduleDecisionResponse {
+  schedule_id: number;
+  action: string;
+  guide_confirmed_at: string | null;
+  guide_rejected_at: string | null;
+  guide_reject_reason: string | null;
+  guide_completed_at: string | null;
+}
+
+export interface GuideGroupResponse {
+  booking_id: number;
+  schedule_id: number;
+  event_id: number;
+  event_title: string;
+  start_datetime: string;
+  end_datetime: string;
+  customer_name: string;
+  customer_email: string | null;
+  customer_phone: string | null;
+  participants: {
+    participant_id: number;
+    first_name: string;
+    last_name: string;
+    patronymic: string | null;
+    age: number | null;
+    is_child: boolean;
+    special_notes: string | null;
+  }[];
+}
 
 /** Публичный ответ GET /schedules/:id для страницы бронирования */
 export interface ScheduleBookingInfo {
@@ -305,4 +362,49 @@ export interface PopularEventPoint {
 export interface AdminReports {
   sales: SalesSummary;
   popular_events: PopularEventPoint[];
+}
+
+/** GET /reports/admin/calendar */
+export interface AdminCalendarDayItem {
+  date: string;
+  confirmed_booking_count: number;
+  booking_ids: number[];
+}
+
+export interface AdminCalendarResponse {
+  year: number;
+  month: number;
+  days: AdminCalendarDayItem[];
+}
+
+/** GET /reports/admin/guide-refusals */
+export interface AdminGuideRefusalItem {
+  schedule_id: number;
+  event_id: number;
+  event_title: string;
+  start_datetime: string;
+  rejected_at: string;
+  reject_reason: string;
+  guide_id: number | null;
+  guide_name: string;
+}
+
+/** GET /guides/my/rating */
+export interface GuideRatingReviewItem {
+  review_id: number;
+  event_id: number;
+  event_title: string;
+  booking_id: number;
+  rating: number;
+  guide_rating: number | null;
+  comment: string | null;
+  created_at: string;
+  author_name: string | null;
+}
+
+export interface GuideRatingResponse {
+  guide_id: number;
+  average_guide_rating: number;
+  reviews_count: number;
+  reviews: GuideRatingReviewItem[];
 }

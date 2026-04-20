@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from database import get_db
 from models import User, UserRole
+from services.guide_account import ensure_guide_profile
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -99,3 +100,15 @@ async def get_current_admin(
             detail="Требуются права администратора",
         )
     return user
+
+
+async def get_current_guide(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
+    if user.role != UserRole.guide:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права гида",
+        )
+    return await ensure_guide_profile(db, user)

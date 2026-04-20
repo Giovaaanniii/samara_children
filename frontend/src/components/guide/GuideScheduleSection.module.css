@@ -1,0 +1,41 @@
+.card {
+  margin-top: 24px;
+}
+
+.intro {
+  margin: 0 0 16px;
+  color: rgba(0, 0, 0, 0.65);
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.filterSelect {
+  min-width: 200px;
+}
+
+.subTime {
+  font-size: 12px;
+}
+
+.reason {
+  font-size: 12px;
+  max-width: 160px;
+}
+
+.nested {
+  padding: 8px 8px 16px 48px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.nestedTable {
+  margin-top: 8px;
+  max-width: 640px;
+}

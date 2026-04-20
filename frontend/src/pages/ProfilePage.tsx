@@ -19,6 +19,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, Navigate } from "react-router-dom";
 
+import AdminProfileCalendar from "../components/admin/AdminProfileCalendar";
+import GuideRatingSection from "../components/guide/GuideRatingSection";
+import GuideScheduleSection from "../components/guide/GuideScheduleSection";
 import { bookingsApi, type BookingStatusFilter } from "../services/bookingsApi";
 import { authApi } from "../services/authApi";
 import { useAuthStore } from "../store/authStore";
@@ -104,7 +107,7 @@ export default function ProfilePage() {
   }, [user, reset]);
 
   const loadBookings = useCallback(async () => {
-    if (!user) return;
+    if (!user || user.role === "guide" || user.role === "admin") return;
     setBookingsLoading(true);
     try {
       const { data } = await bookingsApi.my(statusFilter || undefined);
@@ -222,51 +225,60 @@ export default function ProfilePage() {
         </Form>
       </Card>
 
-      <Card title="Мои бронирования" className={styles.bookingsCard}>
-        <div className={styles.filterRow}>
-          <Text>Статус:</Text>
-          <Select
-            style={{ minWidth: 200 }}
-            value={statusFilter}
-            onChange={(v) => setStatusFilter(v as BookingStatusFilter | "")}
-            options={[
-              { value: "", label: "Все статусы" },
-              ...(Object.entries(bookingStatusLabels) as [BookingStatusFilter, string][]).map(([value, label]) => ({ value, label })),
+      {user.role === "guide" ? (
+        <>
+          <GuideRatingSection />
+          <GuideScheduleSection />
+        </>
+      ) : user.role === "admin" ? (
+        <AdminProfileCalendar />
+      ) : (
+        <Card title="Мои бронирования" className={styles.bookingsCard}>
+          <div className={styles.filterRow}>
+            <Text>Статус:</Text>
+            <Select
+              style={{ minWidth: 200 }}
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as BookingStatusFilter | "")}
+              options={[
+                { value: "", label: "Все статусы" },
+                ...(Object.entries(bookingStatusLabels) as [BookingStatusFilter, string][]).map(([value, label]) => ({ value, label })),
+              ]}
+            />
+          </div>
+
+          <Table<BookingResponse>
+            rowKey="id"
+            loading={bookingsLoading}
+            dataSource={bookings}
+            pagination={{ pageSize: 8 }}
+            locale={{ emptyText: "Нет бронирований" }}
+            columns={[
+              { title: "№", dataIndex: "id", width: 70 },
+              { title: "Мероприятие", render: (_, row) => row.event_title ?? <Text type="secondary">Бронь #{row.id}</Text> },
+              { title: "Сеанс", render: (_, row) => row.schedule_start_datetime ? formatDateTime(row.schedule_start_datetime) : "-" },
+              {
+                title: "Статус",
+                render: (_, row) => (
+                  <Tag color={row.status === "confirmed" ? "green" : row.status === "pending" ? "orange" : row.status === "cancelled" ? "default" : "blue"}>
+                    {bookingStatusLabels[row.status] ?? row.status}
+                  </Tag>
+                ),
+              },
+              { title: "Сумма", render: (_, row) => `${row.total_price} ₽` },
+              {
+                title: "Действия",
+                render: (_, row) => (
+                  <Space wrap>
+                    <Button type="link" onClick={() => openDetails(row.id)}>Детали</Button>
+                    {canCancel(row.status) ? <Button type="link" danger onClick={() => onCancelBooking(row)}>Отменить</Button> : null}
+                  </Space>
+                ),
+              },
             ]}
           />
-        </div>
-
-        <Table<BookingResponse>
-          rowKey="id"
-          loading={bookingsLoading}
-          dataSource={bookings}
-          pagination={{ pageSize: 8 }}
-          locale={{ emptyText: "Нет бронирований" }}
-          columns={[
-            { title: "№", dataIndex: "id", width: 70 },
-            { title: "Мероприятие", render: (_, row) => row.event_title ?? <Text type="secondary">Бронь #{row.id}</Text> },
-            { title: "Сеанс", render: (_, row) => row.schedule_start_datetime ? formatDateTime(row.schedule_start_datetime) : "-" },
-            {
-              title: "Статус",
-              render: (_, row) => (
-                <Tag color={row.status === "confirmed" ? "green" : row.status === "pending" ? "orange" : row.status === "cancelled" ? "default" : "blue"}>
-                  {bookingStatusLabels[row.status] ?? row.status}
-                </Tag>
-              ),
-            },
-            { title: "Сумма", render: (_, row) => `${row.total_price} ₽` },
-            {
-              title: "Действия",
-              render: (_, row) => (
-                <Space wrap>
-                  <Button type="link" onClick={() => openDetails(row.id)}>Детали</Button>
-                  {canCancel(row.status) ? <Button type="link" danger onClick={() => onCancelBooking(row)}>Отменить</Button> : null}
-                </Space>
-              ),
-            },
-          ]}
-        />
-      </Card>
+        </Card>
+      )}
 
       <Modal
         title={detail ? `Бронирование №${detail.id}` : "Загрузка..."}

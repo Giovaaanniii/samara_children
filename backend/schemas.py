@@ -9,6 +9,7 @@ from models import (
     BookingStatus,
     EventCategory,
     EventStatus,
+    GuideAvailabilityStatus,
     Review,
     ScheduleStatus,
     User,
@@ -38,6 +39,7 @@ class UserResponse(BaseModel):
     patronymic: str | None
     phone: str | None
     avatar_url: str | None
+    guide_id: int | None
     is_active: bool
     fcm_token: str | None = None
 
@@ -176,6 +178,7 @@ class GuideCreate(BaseModel):
     specialization: str | None = Field(None, max_length=512)
     hire_date: date | None = None
     is_active: bool = True
+    availability_status: GuideAvailabilityStatus = GuideAvailabilityStatus.active
 
 
 class GuideUpdate(BaseModel):
@@ -188,6 +191,7 @@ class GuideUpdate(BaseModel):
     specialization: str | None = Field(None, max_length=512)
     hire_date: date | None = None
     is_active: bool | None = None
+    availability_status: GuideAvailabilityStatus | None = None
 
 
 class GuideResponse(BaseModel):
@@ -203,6 +207,117 @@ class GuideResponse(BaseModel):
     specialization: str | None
     hire_date: date | None
     is_active: bool
+    availability_status: GuideAvailabilityStatus
+    average_guide_rating: float | None = Field(
+        None,
+        description="Средняя оценка гида (guide_rating) по опубликованным отзывам",
+    )
+    guide_reviews_count: int = Field(
+        0,
+        description="Число опубликованных отзывов с оценкой гида",
+    )
+
+
+class GuideScheduleBookingBrief(BaseModel):
+    """Одна бронь (группа) в рамках сеанса — для отображения гиду."""
+
+    booking_id: int
+    status: BookingStatus
+    participants_count: int
+
+
+class GuideMyScheduleItem(BaseModel):
+    schedule_id: int
+    event_id: int
+    event_title: str
+    start_datetime: datetime
+    end_datetime: datetime
+    schedule_status: ScheduleStatus
+    participants_count: int
+    guide_confirmed_at: datetime | None = None
+    guide_rejected_at: datetime | None = None
+    guide_reject_reason: str | None = None
+    guide_completed_at: datetime | None = None
+    bookings: list[GuideScheduleBookingBrief] = Field(default_factory=list)
+
+
+class GuideRejectRequest(BaseModel):
+    reason: str = Field(..., min_length=3, max_length=500)
+
+
+class GuideScheduleDecisionResponse(BaseModel):
+    schedule_id: int
+    action: str
+    guide_confirmed_at: datetime | None = None
+    guide_rejected_at: datetime | None = None
+    guide_reject_reason: str | None = None
+    guide_completed_at: datetime | None = None
+
+
+class GuideParticipantItem(BaseModel):
+    participant_id: int
+    first_name: str
+    last_name: str
+    patronymic: str | None = None
+    age: int | None = None
+    is_child: bool
+    special_notes: str | None = None
+
+
+class GuideGroupResponse(BaseModel):
+    booking_id: int
+    schedule_id: int
+    event_id: int
+    event_title: str
+    start_datetime: datetime
+    end_datetime: datetime
+    customer_name: str
+    customer_email: str | None = None
+    customer_phone: str | None = None
+    participants: list[GuideParticipantItem]
+
+
+class GuideAvailabilityUpdate(BaseModel):
+    availability_status: GuideAvailabilityStatus
+
+
+class GuideChatDialogItem(BaseModel):
+    admin_id: int
+    admin_name: str
+    last_message: str
+    last_message_at: datetime
+
+
+class GuideChatSendRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=4000)
+
+
+class GuideChatMessageResponse(BaseModel):
+    id: int
+    guide_id: int
+    admin_id: int
+    sender_user_id: int
+    message: str
+    created_at: datetime
+
+
+class GuideRatingReviewItem(BaseModel):
+    review_id: int
+    event_id: int
+    event_title: str
+    booking_id: int
+    rating: int
+    guide_rating: int | None = None
+    comment: str | None = None
+    created_at: datetime
+    author_name: str | None = None
+
+
+class GuideRatingResponse(BaseModel):
+    guide_id: int
+    average_guide_rating: float
+    reviews_count: int
+    reviews: list[GuideRatingReviewItem]
 
 
 class ParticipantCreate(BaseModel):
@@ -342,6 +457,31 @@ class PopularEventPoint(BaseModel):
 class AdminReportsResponse(BaseModel):
     sales: SalesSummaryResponse
     popular_events: list[PopularEventPoint]
+
+
+class AdminCalendarDayItem(BaseModel):
+    """Один день в месяце: число подтверждённых броней (сеанс ещё не завершён)."""
+
+    date: date
+    confirmed_booking_count: int
+    booking_ids: list[int] = Field(default_factory=list)
+
+
+class AdminCalendarResponse(BaseModel):
+    year: int
+    month: int
+    days: list[AdminCalendarDayItem]
+
+
+class AdminGuideRefusalItem(BaseModel):
+    schedule_id: int
+    event_id: int
+    event_title: str
+    start_datetime: datetime
+    rejected_at: datetime
+    reject_reason: str
+    guide_id: int | None = None
+    guide_name: str
 
 
 class ReviewCreate(BaseModel):
