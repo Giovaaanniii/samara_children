@@ -2,9 +2,11 @@ import axios, { type AxiosError } from "axios";
 
 import { useAuthStore } from "../store/authStore";
 
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost:8000/api/v1";
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!rawApiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL is required in root .env");
+}
+const baseURL = rawApiBaseUrl.replace(/\/$/, "");
 
 export const api = axios.create({
   baseURL,

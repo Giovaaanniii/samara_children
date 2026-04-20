@@ -21,9 +21,18 @@
 
 ## Переменные окружения
 
-1. В корне репозитория скопируйте шаблон: `cp .env.example .env` (Windows: `copy .env.example .env`).
-2. Откройте `.env` и задайте как минимум `SECRET_KEY`; при локальном запуске — корректные `DATABASE_URL` и `REDIS_URL` под ваши службы.
-3. Файл `.env` не коммитится; подробности полей — в `.env.example`.
+Используется один файл переменных в корне репозитория: `.env` (для backend, frontend и docker-compose).
+
+Минимально заполните:
+
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- `DATABASE_URL`, `REDIS_URL` (локальный запуск)
+- `DATABASE_URL_DOCKER`, `REDIS_URL_DOCKER` (docker-compose)
+- `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `FRONTEND_URL`, `PAYMENT_RETURN_URL`, `CORS_ALLOWED_ORIGINS`
+- `VITE_API_BASE_URL` (фронтенд)
+
+Файл `.env` не коммитится.
 
 ## Миграции базы данных
 
@@ -39,7 +48,7 @@ docker compose up --build
 
 ### Ручной SQL в контейнере PostgreSQL
 
-Если нужно применить скрипт из `backend/migrations/` вручную (имя сервиса и учётные данные возьмите из своего `docker-compose.yml` и `.env`; ниже — типичные `postgres`, пользователь и БД из `.env.example`):
+Если нужно применить скрипт из `backend/migrations/` вручную (имя сервиса и учётные данные возьмите из своего `docker-compose.yml` и `.env`; ниже — типичные `postgres`, пользователь и БД из текущего `.env`):
 
 ```bash
 docker compose exec -T postgres psql -U samara -d samara_children -f - < backend/migrations/add_review_engagement_rating.sql
