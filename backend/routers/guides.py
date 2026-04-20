@@ -11,10 +11,15 @@ from database import get_db
 from models import Guide, User
 from schemas import GuideCreate, GuideResponse, GuideUpdate
 
-router = APIRouter(prefix="/guides", tags=["guides"])
+router = APIRouter(prefix="/guides", tags=["Гиды"])
 
 
-@router.get("", response_model=list[GuideResponse])
+@router.get(
+    "",
+    response_model=list[GuideResponse],
+    summary="Список гидов",
+    description="Возвращает список гидов с фильтрацией по специализации и активности.",
+)
 async def list_guides(
     db: Annotated[AsyncSession, Depends(get_db)],
     specialization: str | None = Query(
@@ -35,7 +40,12 @@ async def list_guides(
     return list(result.scalars().all())
 
 
-@router.get("/{guide_id}", response_model=GuideResponse)
+@router.get(
+    "/{guide_id}",
+    response_model=GuideResponse,
+    summary="Карточка гида",
+    description="Возвращает информацию о конкретном гиде по идентификатору.",
+)
 async def get_guide(
     guide_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -49,7 +59,13 @@ async def get_guide(
     return guide
 
 
-@router.post("", response_model=GuideResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=GuideResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать гида",
+    description="Добавляет нового гида. Доступно только администратору.",
+)
 async def create_guide(
     data: GuideCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -72,7 +88,12 @@ async def create_guide(
     return guide
 
 
-@router.put("/{guide_id}", response_model=GuideResponse)
+@router.put(
+    "/{guide_id}",
+    response_model=GuideResponse,
+    summary="Обновить гида",
+    description="Обновляет данные гида по идентификатору. Доступно только администратору.",
+)
 async def update_guide(
     guide_id: int,
     data: GuideUpdate,
@@ -92,7 +113,12 @@ async def update_guide(
     return guide
 
 
-@router.delete("/{guide_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{guide_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить гида",
+    description="Удаляет гида по идентификатору. Доступно только администратору.",
+)
 async def delete_guide(
     guide_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],

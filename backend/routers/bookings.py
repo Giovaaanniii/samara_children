@@ -46,7 +46,7 @@ from services.email_service import booking_qr_data_uri
 from services.payment_service import create_payment, create_refund
 from services.redis_client import RedisDep
 
-router = APIRouter(prefix="/bookings", tags=["bookings"])
+router = APIRouter(prefix="/bookings", tags=["Бронирования"])
 
 
 def _payment_return_url_with_booking(booking_id: int) -> str:
@@ -123,7 +123,13 @@ def _assert_may_cancel_by_time(schedule: Schedule) -> None:
         )
 
 
-@router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=BookingResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать бронирование",
+    description="Создаёт бронирование, временно блокирует места в Redis и инициирует оплату.",
+)
 async def create_booking(
     data: BookingCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -226,7 +232,12 @@ async def create_booking(
     )
 
 
-@router.get("/my", response_model=list[BookingResponse])
+@router.get(
+    "/my",
+    response_model=list[BookingResponse],
+    summary="Мои бронирования",
+    description="Возвращает список бронирований текущего пользователя с возможностью фильтрации по статусу.",
+)
 async def list_my_bookings(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -263,7 +274,12 @@ async def list_my_bookings(
     return out
 
 
-@router.get("/admin/all", response_model=list[BookingResponse])
+@router.get(
+    "/admin/all",
+    response_model=list[BookingResponse],
+    summary="Все бронирования (админ)",
+    description="Возвращает список всех бронирований для админ-панели с фильтрами по статусу и периоду.",
+)
 async def list_all_bookings_admin(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(get_current_admin)],
@@ -317,7 +333,12 @@ async def list_all_bookings_admin(
     return out
 
 
-@router.get("/{booking_id}/status", response_model=BookingStatusSnapshotResponse)
+@router.get(
+    "/{booking_id}/status",
+    response_model=BookingStatusSnapshotResponse,
+    summary="Статус бронирования",
+    description="Лёгкий эндпоинт для опроса статуса бронирования после возврата с оплаты.",
+)
 async def get_booking_status(
     booking_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -343,7 +364,12 @@ async def get_booking_status(
     )
 
 
-@router.get("/{booking_id}", response_model=BookingDetailResponse)
+@router.get(
+    "/{booking_id}",
+    response_model=BookingDetailResponse,
+    summary="Детали бронирования",
+    description="Возвращает полные данные бронирования, включая участников, мероприятие, сеанс и QR-код (если доступен).",
+)
 async def get_booking(
     booking_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -415,7 +441,12 @@ async def get_booking(
     )
 
 
-@router.post("/{booking_id}/cancel", response_model=BookingCancelResponse)
+@router.post(
+    "/{booking_id}/cancel",
+    response_model=BookingCancelResponse,
+    summary="Отменить бронирование",
+    description="Отменяет бронирование. Для подтверждённых броней инициирует возврат средств (если включено).",
+)
 async def cancel_booking(
     booking_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -563,7 +594,12 @@ async def cancel_booking(
     )
 
 
-@router.post("/{booking_id}/confirm", response_model=BookingResponse)
+@router.post(
+    "/{booking_id}/confirm",
+    response_model=BookingResponse,
+    summary="Подтвердить бронирование (админ)",
+    description="Принудительно переводит бронирование в статус confirmed. Доступно только администратору.",
+)
 async def admin_confirm_booking(
     booking_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],

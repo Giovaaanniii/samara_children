@@ -18,10 +18,16 @@ from database import get_db
 from models import User, UserRole
 from schemas import LoginRequest, Token, UserCreate, UserResponse, UserUpdate
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Регистрация пользователя",
+    description="Создаёт нового пользователя с ролью клиента. Логин и email должны быть уникальными.",
+)
 async def register(
     data: UserCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -52,7 +58,12 @@ async def register(
     return user
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login",
+    response_model=Token,
+    summary="Вход в систему",
+    description="Проверяет логин/email и пароль, затем возвращает JWT токен доступа.",
+)
 async def login(
     body: LoginRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -82,14 +93,24 @@ async def login(
     return Token(access_token=token)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Профиль текущего пользователя",
+    description="Возвращает данные пользователя по Bearer-токену.",
+)
 async def read_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     return current_user
 
 
-@router.put("/me", response_model=UserResponse)
+@router.put(
+    "/me",
+    response_model=UserResponse,
+    summary="Обновление профиля",
+    description="Изменяет данные текущего пользователя. Можно обновить логин, email, пароль и персональные поля.",
+)
 async def update_me(
     body: UserUpdate,
     current_user: Annotated[User, Depends(get_current_user)],

@@ -9,10 +9,14 @@ from database import get_db
 from services.payment_service import handle_webhook
 from services.redis_client import RedisDep
 
-router = APIRouter(prefix="/payment", tags=["payments"])
+router = APIRouter(prefix="/payment", tags=["Платежи"])
 
 
-@router.post("/webhook")
+@router.post(
+    "/webhook",
+    summary="Webhook ЮKassa",
+    description="Принимает уведомления об оплате от ЮKassa и обновляет статус бронирования.",
+)
 async def yookassa_webhook(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],

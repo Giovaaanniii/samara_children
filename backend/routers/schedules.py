@@ -18,7 +18,7 @@ from schemas import (
 )
 from services.schedule_notifications import notify_booking_users_schedule_changed
 
-router = APIRouter(prefix="/schedules", tags=["schedules"])
+router = APIRouter(prefix="/schedules", tags=["Расписание"])
 
 
 async def _guide_schedule_overlaps(
@@ -46,7 +46,12 @@ async def _count_bookings(db: AsyncSession, schedule_id: int) -> int:
     return int(cnt or 0)
 
 
-@router.get("", response_model=list[ScheduleResponse])
+@router.get(
+    "",
+    response_model=list[ScheduleResponse],
+    summary="Список сеансов",
+    description="Возвращает расписание сеансов. Можно фильтровать по мероприятию и дате.",
+)
 async def list_schedules(
     db: Annotated[AsyncSession, Depends(get_db)],
     event_id: int | None = Query(None, ge=1, description="Фильтр по мероприятию"),
@@ -69,7 +74,12 @@ async def list_schedules(
     return list(result.scalars().all())
 
 
-@router.get("/{schedule_id}", response_model=ScheduleBookingInfoResponse)
+@router.get(
+    "/{schedule_id}",
+    response_model=ScheduleBookingInfoResponse,
+    summary="Сеанс для бронирования",
+    description="Возвращает краткие данные сеанса и мероприятия для страницы оформления бронирования.",
+)
 async def get_schedule_for_booking(
     schedule_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -98,7 +108,13 @@ async def get_schedule_for_booking(
     )
 
 
-@router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ScheduleResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать сеанс",
+    description="Создаёт новый сеанс мероприятия с проверкой пересечений расписания гида. Доступно только администратору.",
+)
 async def create_schedule(
     data: ScheduleCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -143,7 +159,12 @@ async def create_schedule(
     return schedule
 
 
-@router.put("/{schedule_id}", response_model=ScheduleResponse)
+@router.put(
+    "/{schedule_id}",
+    response_model=ScheduleResponse,
+    summary="Обновить сеанс",
+    description="Обновляет параметры сеанса. При значимых изменениях отправляет уведомления пользователям. Доступно только администратору.",
+)
 async def update_schedule(
     schedule_id: int,
     data: ScheduleUpdate,
@@ -214,7 +235,12 @@ async def update_schedule(
     return schedule
 
 
-@router.delete("/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{schedule_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить сеанс",
+    description="Удаляет сеанс, если для него нет бронирований. Доступно только администратору.",
+)
 async def delete_schedule(
     schedule_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],

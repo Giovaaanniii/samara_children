@@ -21,10 +21,15 @@ from schemas import (
     review_to_response,
 )
 
-router = APIRouter(prefix="/events", tags=["events"])
+router = APIRouter(prefix="/events", tags=["Мероприятия"])
 
 
-@router.get("", response_model=EventListResponse)
+@router.get(
+    "",
+    response_model=EventListResponse,
+    summary="Список мероприятий",
+    description="Возвращает список мероприятий с фильтрами по категории, статусу, датам и поисковой строке.",
+)
 async def list_events(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: EventCategory | None = Query(None, description="Категория"),
@@ -95,7 +100,12 @@ async def list_events(
     return EventListResponse(items=items, total=total, skip=skip, limit=limit)
 
 
-@router.get("/{event_id}", response_model=EventDetailResponse)
+@router.get(
+    "/{event_id}",
+    response_model=EventDetailResponse,
+    summary="Карточка мероприятия",
+    description="Возвращает детальную информацию о мероприятии, расписание и опубликованные отзывы.",
+)
 async def get_event(
     event_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -127,7 +137,13 @@ async def get_event(
     )
 
 
-@router.post("", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=EventResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать мероприятие",
+    description="Создаёт новое мероприятие. Доступно только администратору.",
+)
 async def create_event(
     data: EventCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -151,7 +167,12 @@ async def create_event(
     return event
 
 
-@router.put("/{event_id}", response_model=EventResponse)
+@router.put(
+    "/{event_id}",
+    response_model=EventResponse,
+    summary="Обновить мероприятие",
+    description="Обновляет поля мероприятия по идентификатору. Доступно только администратору.",
+)
 async def update_event(
     event_id: int,
     data: EventUpdate,
@@ -172,7 +193,12 @@ async def update_event(
     return event
 
 
-@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{event_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить мероприятие",
+    description="Удаляет мероприятие по идентификатору. Доступно только администратору.",
+)
 async def delete_event(
     event_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],

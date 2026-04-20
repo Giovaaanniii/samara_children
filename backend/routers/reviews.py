@@ -28,7 +28,7 @@ from schemas import (
     review_to_response,
 )
 
-router = APIRouter(prefix="/reviews", tags=["reviews"])
+router = APIRouter(prefix="/reviews", tags=["Отзывы"])
 
 
 def _utcnow() -> datetime:
@@ -42,7 +42,12 @@ def _schedule_end_aware(sch: Schedule) -> datetime:
     return st
 
 
-@router.get("/eligible-bookings", response_model=list[EligibleBookingReviewItem])
+@router.get(
+    "/eligible-bookings",
+    response_model=list[EligibleBookingReviewItem],
+    summary="Доступные бронирования для отзыва",
+    description="Возвращает завершённые бронирования пользователя, по которым ещё можно оставить отзыв.",
+)
 async def list_eligible_bookings_for_review(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -75,7 +80,12 @@ async def list_eligible_bookings_for_review(
     return out
 
 
-@router.get("/admin/all", response_model=list[ReviewAdminItem])
+@router.get(
+    "/admin/all",
+    response_model=list[ReviewAdminItem],
+    summary="Список отзывов (админ)",
+    description="Возвращает все отзывы для модерации в админ-панели.",
+)
 async def admin_list_reviews(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(get_current_admin)],
@@ -99,7 +109,12 @@ async def admin_list_reviews(
     ]
 
 
-@router.get("", response_model=list[ReviewResponse])
+@router.get(
+    "",
+    response_model=list[ReviewResponse],
+    summary="Отзывы по мероприятию",
+    description="Возвращает опубликованные отзывы конкретного мероприятия.",
+)
 async def list_reviews_for_event(
     db: Annotated[AsyncSession, Depends(get_db)],
     event_id: int = Query(..., ge=1, description="Идентификатор мероприятия"),
@@ -118,7 +133,13 @@ async def list_reviews_for_event(
     return [review_to_response(r, r.user) for r in rows]
 
 
-@router.post("", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ReviewResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать отзыв",
+    description="Создаёт отзыв по завершённому и оплаченному бронированию текущего пользователя.",
+)
 async def create_review(
     data: ReviewCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -185,7 +206,12 @@ async def create_review(
     return review_to_response(review, current_user)
 
 
-@router.put("/{review_id}", response_model=ReviewResponse)
+@router.put(
+    "/{review_id}",
+    response_model=ReviewResponse,
+    summary="Обновить отзыв",
+    description="Редактирует отзыв автора и пересчитывает итоговую оценку по критериям.",
+)
 async def update_review(
     review_id: int,
     data: ReviewUpdate,
@@ -226,7 +252,12 @@ async def update_review(
     return review_to_response(review, u)
 
 
-@router.delete("/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{review_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить отзыв",
+    description="Удаляет отзыв. Доступно автору отзыва или администратору.",
+)
 async def delete_review(
     review_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],

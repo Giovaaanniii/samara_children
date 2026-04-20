@@ -14,10 +14,15 @@ from database import get_db
 from models import Booking, BookingStatus, Event, Schedule, User
 from schemas import AdminReportsResponse, PopularEventPoint, SalesSummaryResponse
 
-router = APIRouter(prefix="/reports", tags=["reports"])
+router = APIRouter(prefix="/reports", tags=["Отчёты"])
 
 
-@router.get("/admin/summary", response_model=AdminReportsResponse)
+@router.get(
+    "/admin/summary",
+    response_model=AdminReportsResponse,
+    summary="Сводный отчёт (админ)",
+    description="Возвращает агрегированные показатели продаж и топ мероприятий за выбранный период.",
+)
 async def admin_reports_summary(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(get_current_admin)],
