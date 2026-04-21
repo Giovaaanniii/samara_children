@@ -237,7 +237,7 @@ export default function ProfilePage() {
           <div className={styles.filterRow}>
             <Text>Статус:</Text>
             <Select
-              style={{ minWidth: 200 }}
+              className={styles.filterSelect}
               value={statusFilter}
               onChange={(v) => setStatusFilter(v as BookingStatusFilter | "")}
               options={[
@@ -248,28 +248,40 @@ export default function ProfilePage() {
           </div>
 
           <Table<BookingResponse>
+            className={styles.bookingsTable}
             rowKey="id"
             loading={bookingsLoading}
             dataSource={bookings}
             pagination={{ pageSize: 8 }}
+            scroll={{ x: 860 }}
             locale={{ emptyText: "Нет бронирований" }}
             columns={[
               { title: "№", dataIndex: "id", width: 70 },
-              { title: "Мероприятие", render: (_, row) => row.event_title ?? <Text type="secondary">Бронь #{row.id}</Text> },
-              { title: "Сеанс", render: (_, row) => row.schedule_start_datetime ? formatDateTime(row.schedule_start_datetime) : "-" },
+              {
+                title: "Мероприятие",
+                ellipsis: true,
+                render: (_, row) => row.event_title ?? <Text type="secondary">Бронь #{row.id}</Text>,
+              },
+              {
+                title: "Сеанс",
+                width: 190,
+                render: (_, row) => row.schedule_start_datetime ? formatDateTime(row.schedule_start_datetime) : "-",
+              },
               {
                 title: "Статус",
+                width: 150,
                 render: (_, row) => (
                   <Tag color={row.status === "confirmed" ? "green" : row.status === "pending" ? "orange" : row.status === "cancelled" ? "default" : "blue"}>
                     {bookingStatusLabels[row.status] ?? row.status}
                   </Tag>
                 ),
               },
-              { title: "Сумма", render: (_, row) => `${row.total_price} ₽` },
+              { title: "Сумма", width: 120, render: (_, row) => `${row.total_price} ₽` },
               {
                 title: "Действия",
+                width: 180,
                 render: (_, row) => (
-                  <Space wrap>
+                  <Space wrap className={styles.actionButtons}>
                     <Button type="link" onClick={() => openDetails(row.id)}>Детали</Button>
                     {canCancel(row.status) ? <Button type="link" danger onClick={() => onCancelBooking(row)}>Отменить</Button> : null}
                   </Space>
@@ -285,6 +297,8 @@ export default function ProfilePage() {
         open={detailOpen}
         onCancel={closeDetails}
         width={720}
+        centered
+        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
         destroyOnHidden
         footer={
           <Space>

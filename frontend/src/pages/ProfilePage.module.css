@@ -27,6 +27,18 @@
   gap: 12px;
 }
 
+.filterSelect {
+  min-width: 220px;
+}
+
+.bookingsTable {
+  border-radius: 10px;
+}
+
+.actionButtons {
+  row-gap: 0;
+}
+
 .qrBlock {
   text-align: center;
   padding: 16px;
@@ -38,4 +50,22 @@
 .qrBlock img {
   max-width: 220px;
   height: auto;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 18px 12px 36px;
+  }
+
+  .filterRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .filterSelect {
+    width: 100%;
+    min-width: 0;
+  }
 }

@@ -1,4 +1,4 @@
-import { Button, Card, DatePicker, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
+import { Button, Card, DatePicker, Grid, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
 import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 
@@ -26,6 +26,8 @@ function listParams(
 }
 
 export default function AdminBookingsPage() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [items, setItems] = useState<BookingResponse[]>([]);
   const [status, setStatus] = useState<BookingStatus | undefined>();
   const [periodDraft, setPeriodDraft] = useState<[Dayjs, Dayjs] | null>(null);
@@ -69,14 +71,15 @@ export default function AdminBookingsPage() {
 
   return (
     <Card>
-      <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }} wrap>
+      <Space direction="vertical" size={12} style={{ width: "100%", marginBottom: 12 }}>
         <Title level={4} style={{ margin: 0 }}>Все бронирования</Title>
-        <Space wrap>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <DatePicker.RangePicker
             value={periodDraft}
             onChange={(v) => setPeriodDraft(v as [Dayjs, Dayjs] | null)}
             format="DD.MM.YYYY"
             placeholder={["Создано с", "по"]}
+            style={isMobile ? { width: "100%" } : { width: 300 }}
           />
           <Button
             type="primary"
@@ -98,19 +101,20 @@ export default function AdminBookingsPage() {
           </Button>
           <Select
             allowClear
-            style={{ width: 260 }}
+            style={isMobile ? { width: "100%" } : { width: 260 }}
             placeholder="Статус"
             value={status}
             onChange={(v) => setStatus(v)}
             options={bookingStatusOptions}
           />
-        </Space>
+        </div>
       </Space>
       <Table
         rowKey="id"
         loading={loading}
         dataSource={items}
         locale={tableLocale}
+        scroll={{ x: true }}
         columns={[
           { title: "№", dataIndex: "id", width: 70 },
           { title: "Пользователь", dataIndex: "user_id", width: 120 },

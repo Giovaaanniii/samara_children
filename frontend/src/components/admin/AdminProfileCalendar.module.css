@@ -2,26 +2,34 @@
   margin-top: 24px;
 }
 
-.cellInner {
-  min-height: 52px;
-  padding: 4px 2px;
+.cell {
+  min-height: 76px;
+  padding: 6px 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  justify-content: flex-start;
+  gap: 6px;
 }
 
 .cellHasBooking {
-  background: rgba(184, 50, 50, 0.08);
-  border-radius: 6px;
+  background: rgba(184, 50, 50, 0.1);
+  border-radius: 8px;
 }
 
-.dayNum {
+.dayNumber {
+  font-size: 15px;
   font-weight: 600;
+  color: #2a1f1f;
+  line-height: 1.1;
 }
 
-.badge {
-  margin-top: 2px;
+.dayMuted {
+  color: #a0a0a0;
+}
+
+.cellBadge {
+  margin-left: 0;
 }
 
 .hint {

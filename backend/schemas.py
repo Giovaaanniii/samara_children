@@ -581,3 +581,7 @@ class EventListResponse(BaseModel):
     total: int
     skip: int
     limit: int
+
+
+class PopularEventsSelectionUpdate(BaseModel):
+    event_ids: list[int] = Field(default_factory=list, max_length=6)

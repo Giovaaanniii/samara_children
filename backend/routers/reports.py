@@ -210,3 +210,29 @@ async def admin_guide_refusals(
             )
         )
     return out
+
+
+@router.delete(
+    "/admin/guide-refusals/{schedule_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить запись отказа гида (админ)",
+    description=(
+        "Удаляет запись из журнала отказов по конкретному сеансу "
+        "(сбрасывает поля guide_rejected_at/guide_reject_reason/rejected_by_guide_id)."
+    ),
+)
+async def delete_guide_refusal(
+    schedule_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(get_current_admin)],
+) -> None:
+    schedule = await db.get(Schedule, schedule_id)
+    if schedule is None:
+        raise HTTPException(status_code=404, detail="Сеанс не найден")
+    if schedule.guide_rejected_at is None:
+        raise HTTPException(status_code=404, detail="Запись отказа не найдена")
+
+    schedule.guide_rejected_at = None
+    schedule.guide_reject_reason = None
+    schedule.rejected_by_guide_id = None
+    await db.commit()

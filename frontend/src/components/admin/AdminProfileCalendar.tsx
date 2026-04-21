@@ -1,4 +1,17 @@
-import { Badge, Calendar, Card, List, Modal, Spin, Tag, Typography, theme } from "antd";
+import { CloseOutlined } from "@ant-design/icons";
+import {
+  Badge,
+  Button,
+  Calendar,
+  Card,
+  List,
+  Modal,
+  Popconfirm,
+  Spin,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
@@ -13,7 +26,6 @@ const { Text, Paragraph } = Typography;
 
 /** Дни с подтверждёнными бронями (сеанс не завершён / не отменён). */
 export default function AdminProfileCalendar() {
-  const { token } = theme.useToken();
   const [month, setMonth] = useState(() => dayjs().startOf("month"));
   const [loading, setLoading] = useState(false);
   const [countByDay, setCountByDay] = useState<Record<string, number>>({});
@@ -24,6 +36,7 @@ export default function AdminProfileCalendar() {
   const [selectedDay, setSelectedDay] = useState<Dayjs | null>(null);
   const [refusals, setRefusals] = useState<AdminGuideRefusalItem[]>([]);
   const [refusalsLoading, setRefusalsLoading] = useState(false);
+  const [removingScheduleId, setRemovingScheduleId] = useState<number | null>(null);
 
   const loadCalendar = useCallback(async (m: Dayjs) => {
     setLoading(true);
@@ -83,31 +96,42 @@ export default function AdminProfileCalendar() {
     setSelectedDay(null);
   };
 
+  const removeRefusal = async (scheduleId: number) => {
+    setRemovingScheduleId(scheduleId);
+    try {
+      await reportsApi.deleteGuideRefusal(scheduleId);
+      message.success("Запись отказа удалена");
+      await loadRefusals();
+    } catch {
+      message.error("Не удалось удалить запись отказа");
+    } finally {
+      setRemovingScheduleId(null);
+    }
+  };
+
   const cellRender = useCallback(
     (current: Dayjs, info: { type: string }) => {
       if (info.type !== "date") return null;
       const key = current.format("YYYY-MM-DD");
       const n = countByDay[key];
+      const inCurrentMonth = current.month() === month.month();
       return (
-        <div
-          className={
-            n ? `${styles.cellInner} ${styles.cellHasBooking}` : styles.cellInner
-          }
-        >
-          <span className={styles.dayNum}>{current.date()}</span>
+        <div className={`${styles.cell} ${n ? styles.cellHasBooking : ""}`}>
+          <span className={`${styles.dayNumber} ${inCurrentMonth ? "" : styles.dayMuted}`}>
+            {current.date()}
+          </span>
           {n ? (
             <Badge
               count={n}
               size="small"
-              color={token.colorPrimary}
               title={`Подтверждённых броней: ${n}`}
-              className={styles.badge}
+              className={styles.cellBadge}
             />
           ) : null}
         </div>
       );
     },
-    [countByDay, token.colorPrimary],
+    [countByDay, month],
   );
 
   const selectedBookingIds =
@@ -171,7 +195,26 @@ export default function AdminProfileCalendar() {
             dataSource={refusals}
             locale={{ emptyText: "Отказов пока нет" }}
             renderItem={(item) => (
-              <List.Item>
+              <List.Item
+                actions={[
+                  <Popconfirm
+                    key={`delete-refusal-${item.schedule_id}`}
+                    title="Удалить запись отказа?"
+                    description="Точно хотите удалить эту запись?"
+                    okText="Удалить"
+                    cancelText="Отмена"
+                    onConfirm={() => void removeRefusal(item.schedule_id)}
+                  >
+                    <Button
+                      type="text"
+                      danger
+                      icon={<CloseOutlined />}
+                      loading={removingScheduleId === item.schedule_id}
+                      aria-label="Удалить запись отказа"
+                    />
+                  </Popconfirm>,
+                ]}
+              >
                 <List.Item.Meta
                   title={
                     <>

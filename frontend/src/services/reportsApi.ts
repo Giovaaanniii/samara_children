@@ -15,4 +15,7 @@ export const reportsApi = {
     api.get<AdminGuideRefusalItem[]>("/reports/admin/guide-refusals", {
       params: limit ? { limit } : undefined,
     }),
+
+  deleteGuideRefusal: (scheduleId: number) =>
+    api.delete<void>(`/reports/admin/guide-refusals/${scheduleId}`),
 };

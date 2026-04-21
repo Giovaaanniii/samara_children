@@ -117,6 +117,7 @@ export default function AdminGuidesPage() {
         rowKey="id"
         dataSource={list}
         locale={tableLocale}
+        scroll={{ x: true }}
         columns={[
           { title: "Код", dataIndex: "id", width: 70 },
           { title: "ФИО", render: (_, r) => `${r.last_name} ${r.first_name}` },
@@ -167,6 +168,8 @@ export default function AdminGuidesPage() {
         onOk={() => void saveEdit()}
         okText="Сохранить"
         cancelText="Отмена"
+        centered
+        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
         destroyOnClose
       >
         <Form form={editForm} layout="vertical">

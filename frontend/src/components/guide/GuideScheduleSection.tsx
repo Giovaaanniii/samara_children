@@ -203,10 +203,12 @@ export default function GuideScheduleSection() {
         </div>
 
         <Table<GuideMyScheduleItem>
+          className={styles.mainTable}
           rowKey="schedule_id"
           loading={loading || actionLoading}
           dataSource={items}
           pagination={{ pageSize: 8 }}
+          scroll={{ x: 1120 }}
           locale={{ emptyText: "Нет назначенных сеансов" }}
           expandable={{
             expandedRowRender: (row) => (
@@ -223,6 +225,7 @@ export default function GuideScheduleSection() {
                     rowKey="booking_id"
                     pagination={false}
                     dataSource={row.bookings}
+                    scroll={{ x: 620 }}
                     columns={[
                       { title: "Бронь №", dataIndex: "booking_id", width: 90 },
                       {
@@ -352,6 +355,7 @@ export default function GuideScheduleSection() {
               <Title level={5}>Участники</Title>
               <Table
                 size="small"
+                scroll={{ x: 620 }}
                 rowKey="participant_id"
                 pagination={false}
                 dataSource={group.participants}

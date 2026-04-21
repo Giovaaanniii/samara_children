@@ -2,6 +2,7 @@ import type {
   EventCategory,
   EventDetail,
   EventListResponse,
+  EventRecord,
   EventStatus,
 } from "../types";
 
@@ -23,4 +24,9 @@ export const eventsApi = {
     api.get<EventListResponse>("/events", { params }),
 
   getById: (id: number) => api.get<EventDetail>(`/events/${id}`),
+
+  popularNow: () => api.get<EventRecord[]>("/events/popular-now"),
+
+  adminPopularNowSet: (event_ids: number[]) =>
+    api.put<EventRecord[]>("/events/admin/popular-now", { event_ids }),
 };

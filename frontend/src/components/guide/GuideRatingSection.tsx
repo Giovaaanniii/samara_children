@@ -35,27 +35,33 @@ export default function GuideRatingSection() {
         {data ? (
           <>
             <div className={styles.summary}>
-              <Title level={4} style={{ margin: 0 }}>
-                Средняя оценка работы гида:{" "}
+              <div className={styles.summaryTop}>
+                <Title level={5} style={{ margin: 0 }}>
+                  Средняя оценка работы гида
+                </Title>
                 {data.reviews_count > 0 ? (
-                  <>
-                    <Text strong>{data.average_guide_rating.toFixed(2)}</Text>{" "}
+                  <div className={styles.ratingValue}>
+                    <Text strong className={styles.ratingNumber}>
+                      {data.average_guide_rating.toFixed(2)}
+                    </Text>
                     <Rate disabled allowHalf value={data.average_guide_rating} />
-                  </>
+                  </div>
                 ) : (
-                  <Text type="secondary">пока нет опубликованных отзывов</Text>
+                  <Text type="secondary">Пока нет опубликованных отзывов</Text>
                 )}
-              </Title>
+              </div>
               <Text type="secondary">
                 Учтены опубликованные отзывы с оценкой гида ({data.reviews_count} шт.)
               </Text>
             </div>
             {data.reviews.length > 0 ? (
               <Table
+                className={styles.table}
                 size="small"
                 rowKey="review_id"
                 pagination={{ pageSize: 6 }}
                 dataSource={data.reviews}
+                scroll={{ x: 860 }}
                 columns={[
                   { title: "Бронь №", dataIndex: "booking_id", width: 90 },
                   { title: "Мероприятие", dataIndex: "event_title", ellipsis: true },

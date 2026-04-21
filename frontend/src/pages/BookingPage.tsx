@@ -1,4 +1,5 @@
-import { Alert, Spin, Typography, message } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Alert, Button, Spin, Typography, message } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -23,6 +24,7 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const goBack = () => navigate(-1);
 
   useEffect(() => {
     if (authLoading) return;
@@ -156,6 +158,14 @@ export default function BookingPage() {
 
   return (
     <div style={{ padding: "24px 20px 56px", maxWidth: 760, margin: "0 auto" }}>
+      <Button
+        type="text"
+        icon={<ArrowLeftOutlined />}
+        onClick={goBack}
+        style={{ marginBottom: 8, paddingLeft: 0 }}
+      >
+        Назад
+      </Button>
       <Title level={3} style={{ marginBottom: 8 }}>
         Бронирование
       </Title>

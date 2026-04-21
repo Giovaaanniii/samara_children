@@ -15,7 +15,7 @@
 
 .heroImg {
   width: 100%;
-  height: 280px;
+  height: clamp(200px, 38vw, 320px);
   object-fit: cover;
   display: block;
 }
@@ -34,6 +34,28 @@
 
 .meta {
   margin-bottom: 20px;
+}
+
+.descriptions {
+  overflow-x: auto;
+}
+
+.descriptions :global(.ant-descriptions-item-label) {
+  width: 200px;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .descriptions :global(.ant-descriptions-item-label) {
+    width: 140px;
+  }
+}
+
+@media (max-width: 420px) {
+  .descriptions :global(.ant-descriptions-item-label) {
+    width: auto;
+    white-space: normal;
+  }
 }
 
 .reviewCard {

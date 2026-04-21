@@ -252,11 +252,12 @@ export default function EventDetailPage() {
       </Row>
 
       <Descriptions
+        className={styles.descriptions}
         column={1}
         bordered
         size="small"
         style={{ marginTop: 24 }}
-        labelStyle={{ width: 200, background: "#fff9f9" }}
+        labelStyle={{ background: "#fff9f9" }}
       >
         <Descriptions.Item label="Статус">{data.status}</Descriptions.Item>
         {data.max_participants != null && (

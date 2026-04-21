@@ -39,3 +39,28 @@
   margin-top: 8px;
   max-width: 640px;
 }
+
+.mainTable {
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .filterSelect {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nested {
+    padding: 8px;
+  }
+
+  .reason {
+    max-width: 100%;
+  }
+}

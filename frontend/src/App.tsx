@@ -1,12 +1,14 @@
-import { ConfigProvider, theme } from "antd";
+import { UpOutlined } from "@ant-design/icons";
+import { ConfigProvider, FloatButton, theme } from "antd";
 import type { ThemeConfig } from "antd";
 import ruRU from "antd/locale/ru_RU";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
   Route,
   Routes,
+  useLocation,
   useParams,
   useSearchParams,
 } from "react-router-dom";
@@ -18,6 +20,7 @@ import Header from "./components/Header/Header";
 import AdminRoute from "./components/routes/AdminRoute";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import AdminPages from "./pages/AdminPages";
+import AboutPage from "./pages/AboutPage";
 import BookingPage from "./pages/BookingPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import EventsPage from "./pages/EventsPage";
@@ -56,6 +59,28 @@ function LegacyEventBookingRedirect() {
   return <Navigate to={id ? `/events/${id}` : "/events"} replace />;
 }
 
+function EventsScrollTopButton() {
+  const { pathname } = useLocation();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 280);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (pathname !== "/events" || !visible) return null;
+
+  return (
+    <FloatButton
+      icon={<UpOutlined />}
+      aria-label="Наверх"
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+    />
+  );
+}
+
 function AppRoutes() {
   const checkAuth = useAuthStore((s) => s.checkAuth);
 
@@ -70,6 +95,7 @@ function AppRoutes() {
         <main className="app-main">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/events/:id" element={<EventDetailPage />} />
             <Route
@@ -96,6 +122,7 @@ function AppRoutes() {
             />
           </Routes>
         </main>
+        <EventsScrollTopButton />
         <Footer />
       </div>
     </BrowserRouter>

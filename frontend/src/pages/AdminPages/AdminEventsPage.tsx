@@ -14,6 +14,19 @@ import {
 } from "../../utils/adminLabels";
 
 const tableLocale = { emptyText: "Нет данных" };
+const NO_TAG_VALUE = "__no_tag__";
+const targetAudienceOptions = ["0+", "7+", "12+", "14+", "16+"].map((v) => ({
+  label: v,
+  value: v,
+}));
+
+function splitAudience(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .find(Boolean);
+}
 
 const { Title } = Typography;
 
@@ -69,7 +82,7 @@ export default function AdminEventsPage() {
       status: row.status,
       base_price: Number(row.base_price),
       description: row.description ?? undefined,
-      target_audience: row.target_audience ?? undefined,
+      target_audience: splitAudience(row.target_audience),
       duration_minutes: row.duration_minutes ?? undefined,
       max_participants: row.max_participants ?? undefined,
       meeting_point: row.meeting_point ?? undefined,
@@ -84,6 +97,10 @@ export default function AdminEventsPage() {
       const v = await form.validateFields();
       await adminApi.events.update(editing.id, {
         ...v,
+        target_audience:
+          v.target_audience && v.target_audience !== NO_TAG_VALUE
+            ? v.target_audience.trim()
+            : null,
         base_price: String(v.base_price),
       });
       message.success("Сохранено");
@@ -106,6 +123,7 @@ export default function AdminEventsPage() {
         loading={loading}
         dataSource={items}
         locale={tableLocale}
+        scroll={{ x: true }}
         columns={[
           { title: "Код", dataIndex: "id", width: 70 },
           { title: "Название", dataIndex: "title" },
@@ -141,6 +159,8 @@ export default function AdminEventsPage() {
         okText="Сохранить"
         cancelText="Отмена"
         width={640}
+        centered
+        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
         destroyOnClose
       >
         <Form form={form} layout="vertical">
@@ -159,7 +179,16 @@ export default function AdminEventsPage() {
             </Form.Item>
           </Space>
           <Form.Item label="Описание" name="description"><Input.TextArea rows={3} /></Form.Item>
-          <Form.Item label="Целевая аудитория" name="target_audience"><Input /></Form.Item>
+          <Form.Item label="Целевая аудитория (теги)" name="target_audience">
+            <Select
+              options={[
+                { label: "Без тега", value: NO_TAG_VALUE },
+                ...targetAudienceOptions,
+              ]}
+              allowClear
+              placeholder="Выберите возрастной тег"
+            />
+          </Form.Item>
           <Space wrap>
             <Form.Item label="Длит. (мин)" name="duration_minutes"><InputNumber min={1} /></Form.Item>
             <Form.Item label="Макс. участников" name="max_participants"><InputNumber min={1} /></Form.Item>

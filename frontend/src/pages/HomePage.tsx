@@ -26,8 +26,8 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await eventsApi.list({ limit: 6, status: "active" });
-        if (!cancelled) setPopular(data.items);
+        const { data } = await eventsApi.popularNow();
+        if (!cancelled) setPopular(data);
       } catch {
         if (!cancelled) setPopular([]);
       } finally {

@@ -10,11 +10,21 @@ from sqlalchemy.orm import selectinload
 
 from auth import get_current_admin
 from database import get_db
-from models import Event, EventCategory, EventStatus, Review, Schedule, User
+from models import (
+    Event,
+    EventCategory,
+    EventStatus,
+    Review,
+    Schedule,
+    SettingDataType,
+    Settings,
+    User,
+)
 from schemas import (
     EventCreate,
     EventDetailResponse,
     EventListResponse,
+    PopularEventsSelectionUpdate,
     EventResponse,
     EventUpdate,
     ScheduleResponse,
@@ -22,7 +32,50 @@ from schemas import (
 )
 
 router = APIRouter(prefix="/events", tags=["Мероприятия"])
+POPULAR_NOW_SETTING = "home_popular_event_ids"
+POPULAR_NOW_LIMIT = 6
 
+
+def _parse_popular_ids(raw: str | None) -> list[int]:
+    if not raw:
+        return []
+    out: list[int] = []
+    for chunk in raw.split(","):
+        s = chunk.strip()
+        if not s:
+            continue
+        try:
+            n = int(s)
+        except ValueError:
+            continue
+        if n > 0 and n not in out:
+            out.append(n)
+    return out[:POPULAR_NOW_LIMIT]
+
+
+async def _load_popular_events(db: AsyncSession) -> list[Event]:
+    row = (
+        await db.execute(
+            select(Settings).where(Settings.param_name == POPULAR_NOW_SETTING),
+        )
+    ).scalar_one_or_none()
+    ids = _parse_popular_ids(row.param_value if row else None)
+    if not ids:
+        fallback = await db.execute(
+            select(Event)
+            .where(Event.status == EventStatus.active)
+            .order_by(Event.id.desc())
+            .limit(POPULAR_NOW_LIMIT),
+        )
+        return list(fallback.scalars().all())
+
+    events = (
+        await db.execute(
+            select(Event).where(Event.id.in_(ids), Event.status == EventStatus.active),
+        )
+    ).scalars().all()
+    by_id = {ev.id: ev for ev in events}
+    return [by_id[eid] for eid in ids if eid in by_id][:POPULAR_NOW_LIMIT]
 
 @router.get(
     "",
@@ -98,6 +151,64 @@ async def list_events(
     items = [EventResponse.model_validate(row) for row in result.scalars().all()]
 
     return EventListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.get(
+    "/popular-now",
+    response_model=list[EventResponse],
+    summary="Популярные сейчас (главная)",
+    description="Возвращает выбранные админом мероприятия для блока на главной странице (до 6).",
+)
+async def get_popular_now(
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> list[EventResponse]:
+    return [EventResponse.model_validate(ev) for ev in await _load_popular_events(db)]
+
+
+@router.put(
+    "/admin/popular-now",
+    response_model=list[EventResponse],
+    summary="Настроить популярные сейчас (админ)",
+    description="Сохраняет до 6 существующих id мероприятий для блока на главной.",
+)
+async def set_popular_now(
+    data: PopularEventsSelectionUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(get_current_admin)],
+) -> list[EventResponse]:
+    ids = []
+    for eid in data.event_ids:
+        if eid > 0 and eid not in ids:
+            ids.append(eid)
+    ids = ids[:POPULAR_NOW_LIMIT]
+    if ids:
+        existing_ids = set(
+            (
+                await db.execute(
+                    select(Event.id).where(Event.id.in_(ids)),
+                )
+            ).scalars().all(),
+        )
+        ids = [eid for eid in ids if eid in existing_ids]
+
+    row = (
+        await db.execute(
+            select(Settings).where(Settings.param_name == POPULAR_NOW_SETTING),
+        )
+    ).scalar_one_or_none()
+    value = ",".join(str(x) for x in ids)
+    if row is None:
+        row = Settings(
+            param_name=POPULAR_NOW_SETTING,
+            param_value=value,
+            data_type=SettingDataType.string,
+            description="Ручная подборка мероприятий для блока 'Популярные сейчас' (id через запятую)",
+        )
+        db.add(row)
+    else:
+        row.param_value = value
+    await db.commit()
+    return [EventResponse.model_validate(ev) for ev in await _load_popular_events(db)]
 
 
 @router.get(

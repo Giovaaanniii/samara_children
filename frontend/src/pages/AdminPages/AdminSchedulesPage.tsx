@@ -3,6 +3,7 @@ import {
   Card,
   DatePicker,
   Form,
+  Grid,
   InputNumber,
   Modal,
   Popconfirm,
@@ -41,6 +42,8 @@ type EditValues = {
 };
 
 export default function AdminSchedulesPage() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [guides, setGuides] = useState<Guide[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -132,7 +135,7 @@ export default function AdminSchedulesPage() {
       <Space style={{ marginBottom: 14 }} wrap>
         <Select
           allowClear
-          style={{ minWidth: 320 }}
+          style={isMobile ? { width: "100%" } : { minWidth: 320 }}
           placeholder="Фильтр по мероприятию"
           value={eventId}
           onChange={(v) => {
@@ -142,21 +145,41 @@ export default function AdminSchedulesPage() {
           options={events.map((e) => ({ value: e.id, label: `${e.id} — ${e.title}` }))}
         />
       </Space>
-      <Form layout="inline" onFinish={(v) => void create(v as CreateValues)} style={{ marginBottom: 16, flexWrap: "wrap", display: "flex", gap: 8 }}>
+      <Form
+        layout={isMobile ? "vertical" : "inline"}
+        onFinish={(v) => void create(v as CreateValues)}
+        style={{ marginBottom: 16, flexWrap: "wrap", display: "flex", gap: 8 }}
+      >
         <Form.Item name="event_id" rules={[{ required: true }]}>
-          <Select style={{ width: 280 }} placeholder="Мероприятие" options={events.map((e) => ({ value: e.id, label: e.title }))} />
+          <Select
+            style={isMobile ? { width: "100%" } : { width: 280 }}
+            placeholder="Мероприятие"
+            options={events.map((e) => ({ value: e.id, label: e.title }))}
+          />
         </Form.Item>
         <Form.Item name="start_end" rules={[{ required: true }]}>
-          <DatePicker.RangePicker showTime />
+          <DatePicker.RangePicker showTime style={isMobile ? { width: "100%" } : undefined} />
         </Form.Item>
         <Form.Item name="available_slots" rules={[{ required: true }]} initialValue={10}>
-          <InputNumber min={0} placeholder="Мест" />
+          <InputNumber
+            min={0}
+            placeholder="Мест"
+            style={isMobile ? { width: "100%" } : undefined}
+          />
         </Form.Item>
         <Form.Item name="status" initialValue="open" rules={[{ required: true }]}>
-          <Select style={{ width: 220 }} options={scheduleStatusOptions} />
+          <Select
+            style={isMobile ? { width: "100%" } : { width: 220 }}
+            options={scheduleStatusOptions}
+          />
         </Form.Item>
         <Form.Item name="guide_id">
-          <Select allowClear style={{ width: 240 }} placeholder="Гид" options={guides.map((g) => ({ value: g.id, label: `${g.last_name} ${g.first_name}` }))} />
+          <Select
+            allowClear
+            style={isMobile ? { width: "100%" } : { width: 240 }}
+            placeholder="Гид"
+            options={guides.map((g) => ({ value: g.id, label: `${g.last_name} ${g.first_name}` }))}
+          />
         </Form.Item>
         <Button type="primary" htmlType="submit">Добавить</Button>
       </Form>
@@ -164,6 +187,7 @@ export default function AdminSchedulesPage() {
         rowKey="id"
         dataSource={schedules}
         locale={tableLocale}
+        scroll={{ x: true }}
         columns={[
           { title: "Код", dataIndex: "id", width: 70 },
           {
@@ -202,6 +226,9 @@ export default function AdminSchedulesPage() {
         onOk={() => void saveEdit()}
         okText="Сохранить"
         cancelText="Отмена"
+        width={isMobile ? "calc(100vw - 24px)" : undefined}
+        centered
+        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
         destroyOnClose
       >
         <Form form={editForm} layout="vertical">

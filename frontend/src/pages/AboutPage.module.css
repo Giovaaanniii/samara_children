@@ -1,0 +1,150 @@
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px 56px;
+}
+
+.hero {
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.heroInner {
+  position: relative;
+}
+
+.heroLabel {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.heroTitle {
+  margin: 0 0 8px !important;
+}
+
+.heroText {
+  margin: 0;
+  color: #374151;
+  max-width: 760px;
+}
+
+.heroBadge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.card {
+  margin-top: 20px;
+  border-radius: 14px;
+}
+
+.imageCard {
+  height: 100%;
+  border-radius: 14px;
+}
+
+.softShadow {
+  box-shadow: 0 8px 24px rgba(114, 35, 35, 0.08);
+}
+
+.image {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  object-fit: cover;
+}
+
+.imageHint {
+  display: block;
+  margin-top: 8px;
+}
+
+.quote {
+  margin-top: 12px;
+  padding: 12px;
+  border-left: 3px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 8px;
+  color: #374151;
+}
+
+.advantages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.advItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+}
+
+.advIcon {
+  margin-top: 3px;
+  color: #b83232;
+  font-size: 18px;
+}
+
+.contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.contactRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+}
+
+.contactIcon {
+  color: #b83232;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.contactPhone {
+  display: block;
+  color: #1f2937;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contactPhone:hover {
+  text-decoration: underline;
+}
+
+.contactName {
+  display: block;
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .advantages {
+    grid-template-columns: 1fr;
+  }
+}

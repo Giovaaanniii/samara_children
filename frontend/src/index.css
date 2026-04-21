@@ -4,6 +4,7 @@
   --color-bg-page: #faf8f8;
   --color-text: #2a1f1f;
   --radius-card: 12px;
+  --page-pad-x: 20px;
 }
 
 *,
@@ -35,6 +36,7 @@ body {
     "Helvetica Neue",
     sans-serif;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 a {
@@ -43,4 +45,17 @@ a {
 
 a:hover {
   color: var(--color-primary-hover);
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-pad-x: 14px;
+  }
 }
