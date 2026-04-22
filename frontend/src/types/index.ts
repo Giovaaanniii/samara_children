@@ -333,7 +333,6 @@ export interface BookingDetail extends BookingResponse {
   participants: Participant[];
   event: EventBookingInfo;
   schedule: ScheduleBrief;
-  qr_code_data_uri?: string;
 }
 
 export interface BookingCancelResponse {

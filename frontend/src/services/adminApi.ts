@@ -58,6 +58,8 @@ export const adminApi = {
     confirm: (id: number) => api.post<BookingResponse>(`/bookings/${id}/confirm`),
     cancel: (id: number) =>
       api.post<BookingCancelResponse>(`/bookings/${id}/cancel`),
+    updateStatus: (id: number, status: BookingStatus) =>
+      api.patch<BookingResponse>(`/bookings/${id}/admin/status`, { status }),
   },
   reports: {
     summary: (params?: { date_from?: string; date_to?: string }) => {

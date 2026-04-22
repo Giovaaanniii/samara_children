@@ -1,4 +1,4 @@
-import { Button, Card, DatePicker, Grid, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
+import { Button, Card, DatePicker, Grid, Modal, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
 import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 
@@ -33,6 +33,10 @@ export default function AdminBookingsPage() {
   const [periodDraft, setPeriodDraft] = useState<[Dayjs, Dayjs] | null>(null);
   const [appliedPeriod, setAppliedPeriod] = useState<[Dayjs, Dayjs] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<BookingResponse | null>(null);
+  const [editStatus, setEditStatus] = useState<BookingStatus>("pending");
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +70,28 @@ export default function AdminBookingsPage() {
       await load();
     } catch (e) {
       message.error(getApiErrorDetail(e));
+    }
+  };
+
+  const openEditStatus = (row: BookingResponse) => {
+    setEditing(row);
+    setEditStatus(row.status);
+    setEditOpen(true);
+  };
+
+  const saveStatus = async () => {
+    if (!editing) return;
+    setSavingStatus(true);
+    try {
+      await adminApi.bookings.updateStatus(editing.id, editStatus);
+      message.success("Статус бронирования обновлён");
+      setEditOpen(false);
+      setEditing(null);
+      await load();
+    } catch (e) {
+      message.error(getApiErrorDetail(e));
+    } finally {
+      setSavingStatus(false);
     }
   };
 
@@ -128,6 +154,7 @@ export default function AdminBookingsPage() {
             title: "Действия",
             render: (_, r) => (
               <Space>
+                <Button type="link" onClick={() => openEditStatus(r)}>Изменить статус</Button>
                 {r.status === "pending" ? <Button type="link" onClick={() => void confirmBooking(r.id)}>Подтвердить</Button> : null}
                 {r.status !== "cancelled" && r.status !== "completed" ? (
                   <Popconfirm
@@ -144,6 +171,37 @@ export default function AdminBookingsPage() {
           },
         ]}
       />
+      <Modal
+        title={editing ? `Изменить статус брони №${editing.id}` : "Изменить статус"}
+        open={editOpen}
+        onCancel={() => {
+          setEditOpen(false);
+          setEditing(null);
+        }}
+        onOk={() => void saveStatus()}
+        okText="Сохранить"
+        cancelText="Отмена"
+        confirmLoading={savingStatus}
+        centered
+        destroyOnClose
+      >
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Typography.Text type="secondary">
+            Текущий статус: {editing ? bookingStatusLabels[editing.status] : "—"}
+          </Typography.Text>
+          <Select
+            value={editStatus}
+            onChange={(v) => setEditStatus(v)}
+            options={bookingStatusOptions.map((opt) => ({
+              ...opt,
+              disabled: opt.value === "pending",
+            }))}
+          />
+          <Typography.Text type="secondary">
+            Статус pending меняется автоматически и недоступен для ручной установки.
+          </Typography.Text>
+        </Space>
+      </Modal>
     </Card>
   );
 }

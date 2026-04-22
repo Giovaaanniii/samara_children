@@ -58,6 +58,10 @@ export default function GuideScheduleSection() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectScheduleId, setRejectScheduleId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifySchedule, setVerifySchedule] = useState<GuideMyScheduleItem | null>(null);
+  const [verifyBookingInput, setVerifyBookingInput] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -157,6 +161,42 @@ export default function GuideScheduleSection() {
         }
       },
     });
+  };
+
+  const openVerifyByBooking = (row: GuideMyScheduleItem) => {
+    setVerifySchedule(row);
+    setVerifyBookingInput("");
+    setVerifyOpen(true);
+  };
+
+  const submitVerifyByBooking = async () => {
+    if (!verifySchedule) return;
+    const bookingId = Number(verifyBookingInput.trim());
+    if (!Number.isFinite(bookingId) || bookingId < 1) {
+      message.warning("Введите корректный номер бронирования.");
+      return;
+    }
+    const booking = verifySchedule.bookings.find((b) => b.booking_id === bookingId);
+    if (!booking) {
+      message.error("Такого номера брони нет в текущем сеансе.");
+      return;
+    }
+    if (booking.status !== "confirmed") {
+      message.error("Бронь не подтверждена/не оплачена.");
+      return;
+    }
+    setVerifyLoading(true);
+    try {
+      await guidesApi.markCompleted(verifySchedule.schedule_id);
+      message.success(`Сеанс завершён по бронированию №${bookingId}`);
+      setVerifyOpen(false);
+      setVerifySchedule(null);
+      await load();
+    } catch (e) {
+      message.error(getApiErrorDetail(e));
+    } finally {
+      setVerifyLoading(false);
+    }
   };
 
   const canDecide = (row: GuideMyScheduleItem) =>
@@ -305,7 +345,7 @@ export default function GuideScheduleSection() {
             },
             {
               title: "Действия",
-              width: 280,
+              width: 340,
               render: (_, row) => (
                 <Space wrap size="small">
                   {canDecide(row) ? (
@@ -319,9 +359,14 @@ export default function GuideScheduleSection() {
                     </>
                   ) : null}
                   {canComplete(row) ? (
-                    <Button size="small" onClick={() => onCompleted(row.schedule_id)}>
-                      Проведена
-                    </Button>
+                    <>
+                      <Button size="small" onClick={() => openVerifyByBooking(row)}>
+                        Подтвердить по № брони
+                      </Button>
+                      <Button size="small" onClick={() => onCompleted(row.schedule_id)}>
+                        Проведена
+                      </Button>
+                    </>
                   ) : null}
                 </Space>
               ),
@@ -374,6 +419,53 @@ export default function GuideScheduleSection() {
             </div>
           </Space>
         ) : null}
+      </Modal>
+
+      <Modal
+        title={
+          verifySchedule
+            ? `Подтверждение по номеру брони · сеанс #${verifySchedule.schedule_id}`
+            : "Подтверждение по номеру брони"
+        }
+        open={verifyOpen}
+        onCancel={() => {
+          setVerifyOpen(false);
+          setVerifySchedule(null);
+          setVerifyBookingInput("");
+        }}
+        footer={
+          <Space>
+            <Button
+              onClick={() => {
+                setVerifyOpen(false);
+                setVerifySchedule(null);
+                setVerifyBookingInput("");
+              }}
+            >
+              Отмена
+            </Button>
+            <Button type="primary" loading={verifyLoading} onClick={() => void submitVerifyByBooking()}>
+              Подтвердить и завершить
+            </Button>
+          </Space>
+        }
+        centered
+        destroyOnHidden
+      >
+        <div className={styles.scannerWrap}>
+          <Text type="secondary">
+            Попросите клиента назвать номер бронирования и введите его ниже.
+          </Text>
+          <Input
+            value={verifyBookingInput}
+            onChange={(e) => setVerifyBookingInput(e.target.value)}
+            placeholder="Например: 125"
+            inputMode="numeric"
+          />
+          <Text type="secondary">
+            Если номер корректный и бронь подтверждена, сеанс будет отмечен как проведённый.
+          </Text>
+        </div>
       </Modal>
 
       <Modal

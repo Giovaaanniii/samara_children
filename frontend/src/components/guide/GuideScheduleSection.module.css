@@ -44,6 +44,12 @@
   border-radius: 10px;
 }
 
+.scannerWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 @media (max-width: 768px) {
   .filters {
     display: grid;

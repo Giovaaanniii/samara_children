@@ -237,7 +237,11 @@ async def get_event(
             detail="Мероприятие не найдено",
         )
 
-    schedules = sorted(event.schedules, key=lambda s: s.start_datetime)
+    now_utc = datetime.now(timezone.utc)
+    schedules = sorted(
+        [s for s in event.schedules if s.end_datetime > now_utc],
+        key=lambda s: s.start_datetime,
+    )
     published = [r for r in event.reviews if r.is_published]
 
     base = EventResponse.model_validate(event)

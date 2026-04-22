@@ -27,6 +27,7 @@ from models import (
     UserRole,
 )
 from schemas import (
+    BookingAdminStatusUpdate,
     BookingCancelResponse,
     BookingCreate,
     BookingDetailResponse,
@@ -42,7 +43,6 @@ from services.booking_lock import (
     reserve_slots_and_lock,
     restore_slots_after_paid_cancel,
 )
-from services.email_service import booking_qr_data_uri
 from services.payment_service import create_payment, create_refund
 from services.redis_client import RedisDep
 
@@ -146,6 +146,11 @@ async def create_booking(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Сеанс недоступен для бронирования",
+        )
+    if _schedule_start_aware(schedule) <= datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Сеанс уже начался или завершился и недоступен для бронирования",
         )
 
     if data.participants_count > schedule.available_slots:
@@ -368,7 +373,7 @@ async def get_booking_status(
     "/{booking_id}",
     response_model=BookingDetailResponse,
     summary="Детали бронирования",
-    description="Возвращает полные данные бронирования, включая участников, мероприятие, сеанс и QR-код (если доступен).",
+    description="Возвращает полные данные бронирования, включая участников, мероприятие и сеанс.",
 )
 async def get_booking(
     booking_id: int,
@@ -398,15 +403,6 @@ async def get_booking(
     assert booking.schedule.event is not None
     ev = booking.schedule.event
     sch = booking.schedule
-    qr_uri = ""
-    # Пропуск по QR только до конца сеанса; после окончания мероприятия не отдаём.
-    if booking.status == BookingStatus.confirmed and sch.end_datetime > datetime.now(
-        timezone.utc,
-    ):
-        try:
-            qr_uri = booking_qr_data_uri(booking.id)
-        except Exception:
-            qr_uri = ""
     return BookingDetailResponse(
         id=booking.id,
         user_id=booking.user_id,
@@ -437,7 +433,6 @@ async def get_booking(
             end_datetime=sch.end_datetime,
             status=sch.status,
         ),
-        qr_code_data_uri=qr_uri,
     )
 
 
@@ -642,4 +637,94 @@ async def admin_confirm_booking(
         booking,
         event_title=ev_title,
         schedule_start_datetime=sch_start,
+    )
+
+
+async def _load_admin_booking_response(
+    db: AsyncSession,
+    booking_id: int,
+) -> BookingResponse:
+    result = await db.execute(
+        select(Booking)
+        .options(selectinload(Booking.schedule).selectinload(Schedule.event))
+        .where(Booking.id == booking_id),
+    )
+    booking = result.scalar_one_or_none()
+    if booking is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено",
+        )
+    ev_title: str | None = None
+    sch_start: datetime | None = None
+    if booking.schedule is not None:
+        sch_start = booking.schedule.start_datetime
+        if booking.schedule.event is not None:
+            ev_title = booking.schedule.event.title
+    return _booking_to_response(
+        booking,
+        event_title=ev_title,
+        schedule_start_datetime=sch_start,
+    )
+
+
+@router.patch(
+    "/{booking_id}/admin/status",
+    response_model=BookingResponse,
+    summary="Изменить статус бронирования (админ)",
+    description="Позволяет администратору изменить статус бронирования с учётом бизнес-правил.",
+)
+async def admin_update_booking_status(
+    booking_id: int,
+    data: BookingAdminStatusUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis: RedisDep,
+    current_admin: Annotated[User, Depends(get_current_admin)],
+) -> BookingResponse:
+    booking = await db.get(Booking, booking_id)
+    if booking is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено",
+        )
+
+    current_status = booking.status
+    target_status = data.status
+
+    if target_status == current_status:
+        return await _load_admin_booking_response(db, booking_id)
+
+    if target_status == BookingStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Перевод в статус pending вручную не поддерживается",
+        )
+
+    if target_status == BookingStatus.confirmed:
+        return await admin_confirm_booking(booking_id, db, current_admin)
+
+    if target_status == BookingStatus.cancelled:
+        if current_status not in (BookingStatus.pending, BookingStatus.confirmed):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Текущий статус не допускает отмену",
+            )
+        cancel_result = await cancel_booking(booking_id, db, redis, current_admin)
+        if cancel_result.booking is not None:
+            return await _load_admin_booking_response(db, booking_id)
+
+    if target_status == BookingStatus.completed:
+        if current_status != BookingStatus.confirmed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="В completed можно перевести только подтверждённую бронь",
+            )
+        booking.status = BookingStatus.completed
+        await db.commit()
+        await db.refresh(booking)
+        return await _load_admin_booking_response(db, booking_id)
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Неподдерживаемый переход статуса",
     )

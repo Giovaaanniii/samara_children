@@ -3,34 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-import base64
-import io
 import logging
 from datetime import datetime
 from html import escape
 
-import qrcode
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from config import settings
 
 logger = logging.getLogger(__name__)
-
-# Полезная нагрузка QR для сканирования на входе (id бронирования)
-BOOKING_QR_PREFIX = "samara-booking"
-
-
-def booking_qr_data_uri(booking_id: int) -> str:
-    payload = f"{BOOKING_QR_PREFIX}:{booking_id}"
-    qr = qrcode.QRCode(version=None, box_size=4, border=2)
-    qr.add_data(payload)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="#1a1a2e", back_color="#ffffff")
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-    return f"data:image/png;base64,{b64}"
 
 
 def _base_layout(title: str, inner_html: str) -> str:
@@ -73,13 +55,8 @@ def template_booking_confirmation_html(
     *,
     booking_url: str | None = None,
 ) -> str:
-    """Подтверждение бронирования: QR и ссылка на бронь."""
+    """Подтверждение бронирования: номер брони и ссылка на бронь."""
     link = booking_url or f"{settings.FRONTEND_URL.rstrip('/')}/bookings/{booking_id}"
-    try:
-        qr_src = booking_qr_data_uri(booking_id)
-    except Exception:
-        logger.exception("QR для бронирования %s не сгенерирован", booking_id)
-        qr_src = ""
 
     start_str = start_at.strftime("%d.%m.%Y %H:%M") if start_at.tzinfo else start_at.strftime("%d.%m.%Y %H:%M")
     inner = f"""
@@ -91,10 +68,7 @@ def template_booking_confirmation_html(
       <p style="margin:20px 0;">
         <a href="{escape(link)}" style="display:inline-block;background:#2d3e50;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Открыть бронирование</a>
       </p>
-      <p style="color:#666;font-size:13px;">Покажите QR-код на входе или назовите номер бронирования.</p>
-      <div style="text-align:center;margin:16px 0;">
-        {f'<img src="{qr_src}" alt="QR" width="180" height="180" style="display:inline-block;"/>' if qr_src else ""}
-      </div>
+      <p style="color:#666;font-size:13px;">Сохраните номер бронирования и назовите его гиду при входе.</p>
       <p style="font-size:12px;color:#999;">Ссылка: <a href="{escape(link)}">{escape(link)}</a></p>
     """
     return _base_layout("Бронирование подтверждено", inner)

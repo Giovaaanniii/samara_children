@@ -479,10 +479,31 @@ async def mark_completed(
             status_code=400,
             detail="Сначала подтвердите выход на экскурсию",
         )
+    if schedule.status == ScheduleStatus.completed and schedule.guide_completed_at is not None:
+        return GuideScheduleDecisionResponse(
+            schedule_id=schedule.id,
+            action="completed",
+            guide_confirmed_at=schedule.guide_confirmed_at,
+            guide_rejected_at=schedule.guide_rejected_at,
+            guide_reject_reason=schedule.guide_reject_reason,
+            guide_completed_at=schedule.guide_completed_at,
+        )
 
     now = datetime.now(timezone.utc)
     schedule.guide_completed_at = now
     schedule.status = ScheduleStatus.completed
+
+    # После завершения сеанса гидом переводим все подтверждённые брони в completed.
+    confirmed_bookings = (
+        await db.execute(
+            select(Booking).where(
+                Booking.schedule_id == schedule.id,
+                Booking.status == BookingStatus.confirmed,
+            ),
+        )
+    ).scalars().all()
+    for booking in confirmed_bookings:
+        booking.status = BookingStatus.completed
 
     existing_salary = (
         await db.execute(

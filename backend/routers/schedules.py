@@ -63,7 +63,12 @@ async def list_schedules(
         description="День (UTC): сеансы, пересекающиеся с этими сутками",
     ),
 ) -> list[Schedule]:
-    stmt = select(Schedule).order_by(Schedule.start_datetime)
+    now_utc = datetime.now(timezone.utc)
+    stmt = (
+        select(Schedule)
+        .where(Schedule.end_datetime > now_utc)
+        .order_by(Schedule.start_datetime)
+    )
     if event_id is not None:
         stmt = stmt.where(Schedule.event_id == event_id)
     if on_date is not None:
@@ -93,6 +98,13 @@ async def get_schedule_for_booking(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Сеанс не найден",
         )
+    now_utc = datetime.now(timezone.utc)
+    if schedule.end_datetime <= now_utc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Сеанс неактуален для бронирования",
+        )
+
     event = await db.get(Event, schedule.event_id)
     if event is None:
         raise HTTPException(

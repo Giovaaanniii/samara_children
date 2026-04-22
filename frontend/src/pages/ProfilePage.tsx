@@ -4,7 +4,6 @@ import {
   Card,
   Descriptions,
   Form,
-  Image,
   Input,
   Modal,
   Select,
@@ -25,7 +24,7 @@ import GuideScheduleSection from "../components/guide/GuideScheduleSection";
 import { bookingsApi, type BookingStatusFilter } from "../services/bookingsApi";
 import { authApi } from "../services/authApi";
 import { useAuthStore } from "../store/authStore";
-import type { BookingDetail, BookingResponse, ScheduleBrief } from "../types";
+import type { BookingDetail, BookingResponse } from "../types";
 import { getApiErrorDetail } from "../utils/apiError";
 import { formatDateTime } from "../utils/formatDate";
 import { profileSchema, type ProfileFormValues } from "../utils/validation";
@@ -46,19 +45,6 @@ const categoryLabels: Record<string, string> = {
   quest: "Квест",
   workshop: "Мастер-класс",
 };
-
-/** Сеанс уже прошёл — пропуск по QR не показываем. */
-function isScheduleEnded(schedule: ScheduleBrief): boolean {
-  const t = new Date(schedule.end_datetime).getTime();
-  return Number.isFinite(t) && t <= Date.now();
-}
-
-/** QR только для подтверждённой брони до конца мероприятия. */
-function shouldShowBookingQr(detail: BookingDetail): boolean {
-  if (detail.status !== "confirmed") return false;
-  if (isScheduleEnded(detail.schedule)) return false;
-  return Boolean(detail.qr_code_data_uri);
-}
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
@@ -348,28 +334,9 @@ export default function ProfilePage() {
               />
             </div>
 
-            {shouldShowBookingQr(detail) ? (
-              <div className={styles.qrBlock}>
-                <Text strong>Пропуск (QR)</Text>
-                <div style={{ marginTop: 8 }}>
-                  <Image
-                    src={detail.qr_code_data_uri}
-                    alt="QR-код бронирования"
-                    width={180}
-                    preview={{ mask: "Нажмите для увеличения" }}
-                  />
-                </div>
-                <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
-                  Нажмите на QR, чтобы открыть его крупно. Покажите код на входе или назовите номер бронирования: {detail.id}
-                </Text>
-              </div>
-            ) : (
-              <Text type="secondary">
-                {detail.status === "confirmed" && isScheduleEnded(detail.schedule)
-                  ? "QR-код недоступен: мероприятие уже завершилось."
-                  : "QR-код недоступен для текущего статуса бронирования."}
-              </Text>
-            )}
+            <Text type="secondary">
+              Для входа назовите гиду номер бронирования: <Text strong>№{detail.id}</Text>.
+            </Text>
           </Space>
         ) : null}
       </Modal>

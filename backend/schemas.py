@@ -418,11 +418,16 @@ class BookingStatusSnapshotResponse(BaseModel):
     confirmed_at: datetime | None
 
 
+class BookingAdminStatusUpdate(BaseModel):
+    """Изменение статуса бронирования администратором."""
+
+    status: BookingStatus
+
+
 class BookingDetailResponse(BookingResponse):
     participants: list[ParticipantResponse]
     event: EventBookingInfoResponse
     schedule: ScheduleBriefResponse
-    qr_code_data_uri: str = ""
 
 
 class BookingCancelResponse(BaseModel):
