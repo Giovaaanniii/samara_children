@@ -399,6 +399,11 @@ async def get_booking(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Нет доступа к этому бронированию",
         )
+    if current_user.role == UserRole.client and booking.status == BookingStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Детали бронирования доступны только после оплаты",
+        )
     assert booking.schedule is not None
     assert booking.schedule.event is not None
     ev = booking.schedule.event

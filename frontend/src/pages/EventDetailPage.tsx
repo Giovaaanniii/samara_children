@@ -243,9 +243,9 @@ export default function EventDetailPage() {
               <Text type="secondary">
                 <EnvironmentOutlined /> Встреча
               </Text>
-              <Paragraph style={{ margin: "8px 0 0" }}>
+              <Title level={4} style={{ margin: "8px 0 0" }}>
                 {data.meeting_point}
-              </Paragraph>
+              </Title>
             </Card>
           </Col>
         )}

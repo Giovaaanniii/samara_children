@@ -76,6 +76,26 @@ async def lifespan(app: FastAPI):
         )
         await conn.execute(
             text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_provider VARCHAR(32)",
+            ),
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_provider_user_id VARCHAR(255)",
+            ),
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_user_id BIGINT",
+            ),
+        )
+        await conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_vk_user_id ON users(vk_user_id) WHERE vk_user_id IS NOT NULL",
+            ),
+        )
+        await conn.execute(
+            text(
                 """
                 ALTER TABLE guides
                 ADD COLUMN IF NOT EXISTS availability_status VARCHAR(32) DEFAULT 'active'

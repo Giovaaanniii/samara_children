@@ -16,6 +16,7 @@ from models import (
     EventStatus,
     Review,
     Schedule,
+    ScheduleStatus,
     SettingDataType,
     Settings,
     User,
@@ -239,7 +240,13 @@ async def get_event(
 
     now_utc = datetime.now(timezone.utc)
     schedules = sorted(
-        [s for s in event.schedules if s.end_datetime > now_utc],
+        [
+            s
+            for s in event.schedules
+            if s.end_datetime > now_utc
+            and s.status == ScheduleStatus.open
+            and s.available_slots > 0
+        ],
         key=lambda s: s.start_datetime,
     )
     published = [r for r in event.reviews if r.is_published]

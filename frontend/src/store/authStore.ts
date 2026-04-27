@@ -23,6 +23,7 @@ interface AuthState {
   isLoading: boolean;
   login: (login: string, password: string) => Promise<void>;
   register: (data: UserCreate) => Promise<void>;
+  loginWithToken: (accessToken: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
   setUser: (user: User) => void;
@@ -59,6 +60,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       writeTokenToStorage(tokens.access_token);
       set({ token: tokens.access_token });
+      const { data: me } = await authApi.me();
+      set({ user: me });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  loginWithToken: async (accessToken) => {
+    set({ isLoading: true });
+    try {
+      writeTokenToStorage(accessToken);
+      set({ token: accessToken });
       const { data: me } = await authApi.me();
       set({ user: me });
     } finally {

@@ -63,6 +63,16 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class VkLoginUrlResponse(BaseModel):
+    authorization_url: str
+    state: str
+
+
+class VkExchangeRequest(BaseModel):
+    code: str = Field(..., min_length=1)
+    state: str = Field(..., min_length=1)
+
+
 class LoginRequest(BaseModel):
     login: str = Field(
         ...,

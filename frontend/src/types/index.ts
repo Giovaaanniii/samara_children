@@ -65,6 +65,11 @@ export interface TokenResponse {
   token_type: string;
 }
 
+export interface VkLoginUrlResponse {
+  authorization_url: string;
+  state: string;
+}
+
 export interface EventRecord {
   id: number;
   title: string;

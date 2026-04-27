@@ -268,7 +268,9 @@ export default function ProfilePage() {
                 width: 180,
                 render: (_, row) => (
                   <Space wrap className={styles.actionButtons}>
-                    <Button type="link" onClick={() => openDetails(row.id)}>Детали</Button>
+                    {row.status !== "pending" ? (
+                      <Button type="link" onClick={() => openDetails(row.id)}>Детали</Button>
+                    ) : null}
                     {canCancel(row.status) ? <Button type="link" danger onClick={() => onCancelBooking(row)}>Отменить</Button> : null}
                   </Space>
                 ),

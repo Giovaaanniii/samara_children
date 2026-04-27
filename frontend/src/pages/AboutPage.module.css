@@ -99,7 +99,13 @@
 }
 
 .advIcon {
-  margin-top: 3px;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   color: #b83232;
   font-size: 18px;
 }

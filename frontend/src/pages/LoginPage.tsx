@@ -1,9 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Form, Input, Spin, Typography, message } from "antd";
+import { Button, Divider, Form, Input, Spin, Typography, message } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
+import { authApi } from "../services/authApi";
 import { loginSchema, type LoginFormValues } from "../utils/validation";
 
 const { Title } = Typography;
@@ -31,6 +32,15 @@ export default function LoginPage() {
       navigate(redirect, { replace: true });
     } catch {
       message.error("Неверный логин или пароль");
+    }
+  };
+
+  const onVkLogin = async () => {
+    try {
+      const { data } = await authApi.vkLoginUrl(redirect);
+      window.location.href = data.authorization_url;
+    } catch {
+      message.error("Не удалось начать вход через VK");
     }
   };
 
@@ -83,6 +93,10 @@ export default function LoginPage() {
           onClick={handleSubmit(onSubmit)}
         >
           Войти
+        </Button>
+        <Divider>или</Divider>
+        <Button block onClick={() => void onVkLogin()}>
+          Войти через VK
         </Button>
       </Form>
       <Typography.Paragraph style={{ textAlign: "center", marginTop: 16 }}>

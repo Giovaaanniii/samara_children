@@ -31,6 +31,7 @@ import PaymentReturnPage from "./pages/PaymentReturnPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ProfilePage from "./pages/ProfilePage";
 import RegisterPage from "./pages/RegisterPage";
+import VkAuthCallbackPage from "./pages/VkAuthCallbackPage";
 
 const appTheme: ThemeConfig = {
   algorithm: theme.defaultAlgorithm,
@@ -106,6 +107,7 @@ function AppRoutes() {
             <Route path="/payment/success" element={<PaymentReturnPage />} />
             <Route path="/payment/return" element={<PaymentReturnPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/vk/callback" element={<VkAuthCallbackPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/offer" element={<OfferPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />

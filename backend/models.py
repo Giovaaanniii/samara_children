@@ -5,6 +5,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -117,6 +118,9 @@ class User(Base):
         nullable=True,
     )
     auth_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    oauth_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    oauth_provider_user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    vk_user_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     # FCM (мобильное приложение или Web Push через Firebase)
     fcm_token: Mapped[str | None] = mapped_column(Text, nullable=True)

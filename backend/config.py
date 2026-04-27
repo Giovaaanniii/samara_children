@@ -22,17 +22,20 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
-    YOOKASSA_SHOP_ID: str = ""
-    YOOKASSA_SECRET_KEY: str = ""
+    YOOKASSA_SHOP_ID: str
+    YOOKASSA_SECRET_KEY: str
     # URL возврата пользователя после оплаты (redirect)
     PAYMENT_RETURN_URL: str
     # Отмена: не позже чем за N часов до начала сеанса
     BOOKING_CANCEL_MIN_HOURS_BEFORE_EVENT: int = 24
     # Автовозврат на карту через ЮKassa при отмене оплаченного бронирования
     BOOKING_ONLINE_REFUND_ENABLED: bool = True
-    SENDGRID_API_KEY: str = ""
-    FIREBASE_CREDENTIALS_PATH: str = ""
-    EMAIL_FROM: str = ""
+    SENDGRID_API_KEY: str
+    FIREBASE_CREDENTIALS_PATH: str
+    EMAIL_FROM: str
+    VK_CLIENT_ID: str
+    VK_CLIENT_SECRET: str
+    VK_REDIRECT_URI: str
     # Публичный URL фронтенда (ссылки в письмах, QR, CORS)
     FRONTEND_URL: str
     # Явный список Origins для CORS через запятую (например http://localhost:3000,http://127.0.0.1:3000)

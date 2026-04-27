@@ -94,11 +94,25 @@ export default function AboutPage() {
         <div className={styles.contacts}>
           <div className={styles.contactRow}>
             <PhoneOutlined className={styles.contactIcon} />
-            <span>+79608291455 - Мария Горбунова</span>
+            <span>
+              <a href="tel:+79608291455" className={styles.contactPhone}>
+                +7 960 829-14-55
+              </a>
+              <Text type="secondary" className={styles.contactName}>
+                Мария Горбунова
+              </Text>
+            </span>
           </div>
           <div className={styles.contactRow}>
             <PhoneOutlined className={styles.contactIcon} />
-            <span>+79276536636 - Мария Жарова</span>
+            <span>
+              <a href="tel:+79276536636" className={styles.contactPhone}>
+                +7 927 653-66-36
+              </a>
+              <Text type="secondary" className={styles.contactName}>
+                Мария Жарова
+              </Text>
+            </span>
           </div>
         </div>
         <Text type="secondary">
