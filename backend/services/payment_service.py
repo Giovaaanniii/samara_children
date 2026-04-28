@@ -25,10 +25,7 @@ from models import (
     User,
 )
 from services.booking_lock import clear_booking_lock_only
-from services.notifications import (
-    send_payment_confirmation_email,
-    send_payment_confirmation_push,
-)
+from services.email_service import send_booking_confirmation_email
 
 logger = logging.getLogger(__name__)
 
@@ -226,14 +223,13 @@ async def handle_webhook(
 
     try:
         if user.email:
-            await send_payment_confirmation_email(
+            await send_booking_confirmation_email(
                 user.email,
                 booking.id,
                 event_title=event_title,
                 start_at=schedule.start_datetime,
                 participants_count=booking.participants_count,
             )
-        await send_payment_confirmation_push(user.id, booking.id)
     except Exception:
         logger.exception(
             "Webhook: уведомления после оплаты бронирования %s не отправлены",

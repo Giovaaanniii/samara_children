@@ -44,7 +44,6 @@ from schemas import (
     GuideUpdate,
 )
 from services.email_service import send_email
-from services.notification_service import send_push_notification
 
 router = APIRouter(prefix="/guides", tags=["Гиды"])
 
@@ -159,12 +158,40 @@ async def create_guide(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(get_current_admin)],
 ) -> GuideResponse:
+    email = (data.email or "").strip()
+    phone = (data.phone or "").strip()
+    if not email and not phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Для создания гида укажите email или телефон, существующий у пользователя",
+        )
+
+    user_filters = []
+    if email:
+        user_filters.append(User.email == email)
+    if phone:
+        user_filters.append(User.phone == phone)
+    matched_users = (
+        await db.execute(select(User).where(or_(*user_filters)).order_by(User.id.asc()))
+    ).scalars().all()
+    if not matched_users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не найден пользователь с указанным email/телефоном. Сначала создайте аккаунт пользователя.",
+        )
+    matched_user = matched_users[0]
+    if matched_user.guide_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Этот пользователь уже привязан к карточке гида",
+        )
+
     guide = Guide(
         first_name=data.first_name,
         last_name=data.last_name,
         patronymic=data.patronymic,
-        phone=data.phone,
-        email=data.email,
+        phone=phone or data.phone,
+        email=email or data.email,
         photo_url=data.photo_url,
         specialization=data.specialization,
         hire_date=data.hire_date,
@@ -172,6 +199,13 @@ async def create_guide(
         availability_status=data.availability_status,
     )
     db.add(guide)
+    await db.flush()
+    matched_user.guide_id = guide.id
+    matched_user.role = UserRole.guide
+    if not matched_user.first_name and data.first_name:
+        matched_user.first_name = data.first_name
+    if not matched_user.last_name and data.last_name:
+        matched_user.last_name = data.last_name
     await db.commit()
     await db.refresh(guide)
     stats = await _guide_rating_stats_by_ids(db, [guide.id])
@@ -361,12 +395,6 @@ async def reject_my_schedule(
     ).scalars().all()
     for admin in admins:
         try:
-            await send_push_notification(
-                admin.id,
-                title="Отказ гида от экскурсии",
-                body=f"Гид {guide.last_name} {guide.first_name} отказался от сеанса #{schedule.id}.",
-                data={"type": "guide_reject", "schedule_id": schedule.id},
-            )
             if admin.email:
                 await send_email(
                     admin.email,
@@ -624,16 +652,6 @@ async def send_message_to_admin(
     db.add(message)
     await db.commit()
     await db.refresh(message)
-
-    try:
-        await send_push_notification(
-            admin_id,
-            title="Новое сообщение от гида",
-            body=f"Гид {guide.last_name} {guide.first_name}: {message.message[:120]}",
-            data={"type": "guide_chat", "guide_id": guide.id, "admin_id": admin_id},
-        )
-    except Exception:
-        pass
 
     return GuideChatMessageResponse(
         id=message.id,

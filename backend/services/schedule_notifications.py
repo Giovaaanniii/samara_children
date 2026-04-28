@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Booking, BookingStatus, Event, Schedule, User
 from services.email_service import send_email, send_schedule_change_email
-from services.notification_service import send_push_notification
 
 logger = logging.getLogger(__name__)
 
@@ -80,16 +79,6 @@ async def notify_guide_schedule_changed(
 
     start_str = _format_start(schedule)
     body = f"В расписании вашего сеанса #{schedule.id} есть изменения. Новое время: {start_str}."
-    try:
-        await send_push_notification(
-            guide_user.id,
-            title="Изменение расписания",
-            body=body,
-            data={"type": "guide_schedule_changed", "schedule_id": schedule.id},
-        )
-    except Exception:
-        logger.exception("Не удалось отправить push-уведомление гиду user_id=%s", guide_user.id)
-
     if guide_user.email:
         try:
             await send_email(
