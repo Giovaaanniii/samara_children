@@ -31,7 +31,6 @@ export interface User {
   /** Связь с таблицей guides для роли guide */
   guide_id: number | null;
   is_active: boolean;
-  fcm_token?: string | null;
 }
 
 export interface UserCreate {
@@ -52,7 +51,6 @@ export interface UserUpdate {
   last_name?: string | null;
   patronymic?: string | null;
   phone?: string | null;
-  fcm_token?: string | null;
 }
 
 export interface LoginRequest {

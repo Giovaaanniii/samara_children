@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     # Автовозврат на карту через ЮKassa при отмене оплаченного бронирования
     BOOKING_ONLINE_REFUND_ENABLED: bool = True
     SENDGRID_API_KEY: str
-    FIREBASE_CREDENTIALS_PATH: str
     EMAIL_FROM: str
     VK_CLIENT_ID: str
     VK_CLIENT_SECRET: str
