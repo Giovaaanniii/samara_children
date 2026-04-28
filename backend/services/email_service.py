@@ -1,14 +1,10 @@
-"""Отправка писем через SendGrid и HTML-шаблоны."""
+"""Email-уведомления (интеграция отключена, сохранены шаблоны)."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime
 from html import escape
-
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
 from config import settings
 
@@ -161,27 +157,14 @@ def template_marketing_html(
     return _base_layout(headline, inner)
 
 
-def _send_email_sync(to_email: str, subject: str, html_content: str) -> None:
-    if not settings.SENDGRID_API_KEY or not settings.EMAIL_FROM:
-        logger.warning(
-            "SendGrid не настроен (SENDGRID_API_KEY / EMAIL_FROM), письмо «%s» не отправлено",
-            subject,
-        )
-        return
-
-    message = Mail(
-        from_email=settings.EMAIL_FROM,
-        to_emails=to_email,
-        subject=subject,
-        html_content=html_content,
-    )
-    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-    sg.send(message)
-
-
 async def send_email(to_email: str, subject: str, html_content: str) -> None:
-    """Отправка HTML-письма через SendGrid (в пуле потоков — не блокирует event loop)."""
-    await asyncio.to_thread(_send_email_sync, to_email, subject, html_content)
+    """Интеграция email отключена: логируем попытку отправки."""
+    _ = html_content
+    logger.info(
+        "Email интеграция отключена: письмо «%s» для %s не отправлено",
+        subject,
+        to_email,
+    )
 
 
 async def send_booking_confirmation_email(

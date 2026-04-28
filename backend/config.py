@@ -30,8 +30,6 @@ class Settings(BaseSettings):
     BOOKING_CANCEL_MIN_HOURS_BEFORE_EVENT: int = 24
     # Автовозврат на карту через ЮKassa при отмене оплаченного бронирования
     BOOKING_ONLINE_REFUND_ENABLED: bool = True
-    SENDGRID_API_KEY: str
-    EMAIL_FROM: str
     VK_CLIENT_ID: str
     VK_CLIENT_SECRET: str
     VK_REDIRECT_URI: str

@@ -453,7 +453,10 @@ async def my_group(
             detail="Доступ к группе открывается после подтверждения выхода гидом",
         )
     now = datetime.now(timezone.utc)
-    if sch.start_datetime - now > timedelta(hours=1):
+    # Ограничение "не ранее чем за 1 час" применяем только к будущим, ещё не завершённым сеансам.
+    is_completed = sch.status == ScheduleStatus.completed or sch.guide_completed_at is not None
+    is_past = sch.end_datetime <= now
+    if not is_completed and not is_past and sch.start_datetime - now > timedelta(hours=1):
         raise HTTPException(
             status_code=403,
             detail="Список участников доступен не ранее чем за 1 час до начала",
