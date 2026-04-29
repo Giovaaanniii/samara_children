@@ -33,6 +33,14 @@ const categories: { value: EventCategory | ""; label: string }[] = [
   { value: "workshop", label: "Мастер-классы" },
 ];
 
+const audienceTags = [
+  { value: "0+", label: "0+" },
+  { value: "7+", label: "7+" },
+  { value: "12+", label: "12+" },
+  { value: "14+", label: "14+" },
+  { value: "16+", label: "16+" },
+];
+
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -164,13 +172,15 @@ export default function EventsPage() {
               />
             </Col>
             <Col xs={24} md={12} lg={8}>
-              <Text type="secondary">Возрастная группа / аудитория</Text>
-              <Input
+              <Text type="secondary">Возрастной тег</Text>
+              <Select
                 size="large"
                 allowClear
-                placeholder="Подстрока поиска, напр. школьник"
+                style={{ width: "100%" }}
+                placeholder="Например: 7+"
                 value={draftAudience}
-                onChange={(e) => setDraftAudience(e.target.value)}
+                options={audienceTags}
+                onChange={(v) => setDraftAudience(v ?? "")}
               />
             </Col>
             <Col xs={24} md={12} lg={10}>
