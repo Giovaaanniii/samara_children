@@ -13,4 +13,24 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('react-router')) return 'react-router'
+          if (
+            id.includes('node_modules/react-dom') ||
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'react-core'
+          }
+          if (id.includes('antd') || id.includes('@ant-design')) return 'antd'
+          if (id.includes('recharts')) return 'recharts'
+          return 'vendor'
+        },
+      },
+    },
+  },
 })
