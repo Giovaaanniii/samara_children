@@ -149,6 +149,39 @@ export interface BookingResponse {
   schedule_start_datetime?: string | null;
 }
 
+export interface Participant {
+  id: number;
+  first_name: string;
+  last_name: string;
+  patronymic: string | null;
+  age: number | null;
+  is_child: boolean;
+  special_notes: string | null;
+}
+
+export interface EventBookingInfo {
+  id: number;
+  title: string;
+  description: string | null;
+  meeting_point: string | null;
+  duration_minutes: number | null;
+  category: EventCategory;
+  base_price: string;
+}
+
+export interface ScheduleBrief {
+  id: number;
+  start_datetime: string;
+  end_datetime: string;
+  status: ScheduleStatus;
+}
+
+export interface BookingDetail extends BookingResponse {
+  participants: Participant[];
+  event: EventBookingInfo;
+  schedule: ScheduleBrief;
+}
+
 export interface UserUpdate {
   login?: string | null;
   email?: string | null;

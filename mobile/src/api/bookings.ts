@@ -1,5 +1,6 @@
 import type {
   BookingCreate,
+  BookingDetail,
   BookingResponse,
   BookingStatus,
 } from "../types/api";
@@ -14,4 +15,6 @@ export const bookingsApi = {
     api.get<BookingResponse[]>("/bookings/my", {
       params: status ? { status } : undefined,
     }),
+
+  getById: (id: number) => api.get<BookingDetail>(`/bookings/${id}`),
 };
