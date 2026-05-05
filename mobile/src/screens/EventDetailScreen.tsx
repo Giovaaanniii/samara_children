@@ -15,9 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { eventsApi } from "../api/events";
 import { getApiErrorDetail } from "../lib/errors";
+import { formatDateTime } from "../lib/formatDate";
 import type { RootStackParamList } from "../navigation/types";
 import { colors } from "../theme";
-import type { EventDetail, Schedule } from "../types/api";
+import type { EventDetail, Review, Schedule } from "../types/api";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type R = RouteProp<RootStackParamList, "EventDetail">;
@@ -92,6 +93,7 @@ export default function EventDetailScreen() {
   const openSchedules: Schedule[] = event.schedules.filter(
     (s) => s.status === "open" && s.available_slots > 0,
   );
+  const reviews: Review[] = event.reviews ?? [];
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
@@ -131,6 +133,28 @@ export default function EventDetailScreen() {
               >
                 <Text style={styles.bookBtnText}>Забронировать</Text>
               </Pressable>
+            </View>
+          ))
+        )}
+
+        <Text style={styles.h2}>Отзывы</Text>
+        {reviews.length === 0 ? (
+          <Text style={styles.muted}>Пока нет опубликованных отзывов.</Text>
+        ) : (
+          reviews.map((r) => (
+            <View key={r.id} style={styles.reviewCard}>
+              <View style={styles.reviewTop}>
+                <Text style={styles.reviewAuthor}>{r.author_name ?? "Клиент"}</Text>
+                <Text style={styles.reviewRate}>
+                  {Number.isFinite(r.average_rating) ? r.average_rating.toFixed(1) : r.rating.toFixed(1)} / 5
+                </Text>
+              </View>
+              {r.comment ? (
+                <Text style={styles.reviewComment}>{r.comment}</Text>
+              ) : (
+                <Text style={styles.reviewCommentEmpty}>Комментарий не оставлен.</Text>
+              )}
+              <Text style={styles.reviewDate}>{formatDateTime(r.created_at)}</Text>
             </View>
           ))
         )}
@@ -182,6 +206,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   bookBtnText: { color: "#fff", fontWeight: "700" },
+  reviewCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    padding: 12,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  reviewTop: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  reviewAuthor: { fontWeight: "700", color: colors.text },
+  reviewRate: { fontWeight: "700", color: colors.primary },
+  reviewComment: { color: colors.text, lineHeight: 20 },
+  reviewCommentEmpty: { color: colors.muted },
+  reviewDate: { marginTop: 6, fontSize: 12, color: colors.muted },
   error: { color: colors.error, textAlign: "center", marginBottom: 12 },
   retry: {
     backgroundColor: colors.primary,

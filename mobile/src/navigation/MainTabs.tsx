@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AboutScreen from "../screens/AboutScreen";
 import EventsScreen from "../screens/EventsScreen";
@@ -11,6 +12,8 @@ import type { MainTabParamList } from "./types";
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -19,6 +22,16 @@ export default function MainTabs() {
         headerTintColor: colors.text,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "700",
+          marginBottom: 1,
+        },
+        tabBarStyle: {
+          height: 58 + insets.bottom,
+          paddingTop: 3,
+          paddingBottom: Math.max(insets.bottom, 6),
+        },
       }}
     >
       <Tab.Screen
@@ -27,7 +40,9 @@ export default function MainTabs() {
         options={{
           title: "Главная",
           tabBarLabel: "Главная",
-          tabBarIcon: ({ color }) => <Text style={{ color }}>⌂</Text>,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={20} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -36,7 +51,9 @@ export default function MainTabs() {
         options={{
           title: "Мероприятия",
           tabBarLabel: "События",
-          tabBarIcon: ({ color }) => <Text style={{ color }}>☰</Text>,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="calendar-outline" size={20} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -45,7 +62,9 @@ export default function MainTabs() {
         options={{
           title: "О нас",
           tabBarLabel: "О нас",
-          tabBarIcon: ({ color }) => <Text style={{ color }}>ⓘ</Text>,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="information-circle-outline" size={20} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -54,7 +73,9 @@ export default function MainTabs() {
         options={{
           title: "Профиль",
           tabBarLabel: "Профиль",
-          tabBarIcon: ({ color }) => <Text style={{ color }}>👤</Text>,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={20} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>

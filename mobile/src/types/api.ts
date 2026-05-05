@@ -80,7 +80,23 @@ export interface Schedule {
 
 export interface EventDetail extends EventRecord {
   schedules: Schedule[];
-  reviews: unknown[];
+  reviews: Review[];
+}
+
+export interface Review {
+  id: number;
+  user_id: number;
+  event_id: number;
+  booking_id: number;
+  rating: number;
+  average_rating: number;
+  comment: string | null;
+  guide_rating: number | null;
+  engagement_rating: number | null;
+  organization_rating: number | null;
+  created_at: string;
+  is_published: boolean;
+  author_name?: string | null;
 }
 
 export interface EventListResponse {
