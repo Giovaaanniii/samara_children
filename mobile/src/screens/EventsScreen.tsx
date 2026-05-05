@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -95,7 +96,11 @@ export default function EventsScreen() {
           onSubmitEditing={() => setPage(1)}
           returnKeyType="search"
         />
-        <View style={styles.catRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}
+        >
           {categories.map((c) => (
             <Pressable
               key={c.label}
@@ -118,7 +123,7 @@ export default function EventsScreen() {
               </Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
         <Pressable
           style={styles.apply}
           onPress={() => {
@@ -194,7 +199,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.text,
   },
-  catRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
+  catRow: { flexDirection: "row", gap: 8, marginBottom: 10, paddingRight: 8 },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -202,10 +207,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
+    minWidth: 92,
+    alignItems: "center",
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: 13, color: colors.text },
-  chipTextActive: { color: "#fff", fontWeight: "600" },
+  chipText: { fontSize: 13, color: colors.text, fontWeight: "600" },
+  chipTextActive: { color: "#fff" },
   apply: {
     alignSelf: "flex-start",
     backgroundColor: colors.primary,

@@ -26,13 +26,25 @@ export default function AboutScreen() {
 
         <Text style={styles.h2}>Наши преимущества</Text>
         <Text style={styles.li}>• гибкий график и индивидуальный подход;</Text>
-        <Text style={styles.li}>• адекватные цены и авторские программы;</Text>
-        <Text style={styles.li}>• проверенные маршруты и безопасность;</Text>
-        <Text style={styles.li}>• комфортабельный транспорт и сильная команда.</Text>
+        <Text style={styles.li}>
+          • адекватные цены и эксклюзивные экскурсионные программы;
+        </Text>
+        <Text style={styles.li}>• годовые абонементы и проверенные маршруты;</Text>
+        <Text style={styles.li}>
+          • комфортабельные автобусы с разрешением в ГИБДД;
+        </Text>
+        <Text style={styles.li}>
+          • высококвалифицированные водители и лучшие экскурсоводы.
+        </Text>
 
         <Text style={styles.h2}>Контакты</Text>
         <Pressable onPress={() => void Linking.openURL("tel:+79608291455")}>
           <Text style={styles.link}>+7 960 829-14-55</Text>
+          <Text style={styles.contactName}>Мария Горбунова</Text>
+        </Pressable>
+        <Pressable onPress={() => void Linking.openURL("tel:+79276536636")}>
+          <Text style={styles.link}>+7 927 653-66-36</Text>
+          <Text style={styles.contactName}>Мария Жарова</Text>
         </Pressable>
 
         {WEB_BASE_URL ? (
@@ -75,5 +87,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   legal: { marginTop: 16, gap: 8 },
+  contactName: { marginTop: -4, marginBottom: 8, color: colors.muted, fontSize: 13 },
   hint: { marginTop: 12, color: colors.muted, fontSize: 13 },
 });
