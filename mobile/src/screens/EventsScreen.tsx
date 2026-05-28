@@ -242,3 +242,4 @@ const styles = StyleSheet.create({
   pageBtnText: { color: "#fff", fontWeight: "700" },
   pageInfo: { fontSize: 14, color: colors.muted },
 });
+

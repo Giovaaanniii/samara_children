@@ -118,3 +118,4 @@ const styles = StyleSheet.create({
   comment: { marginTop: 6, color: colors.text },
   reviewDate: { fontSize: 12, color: colors.muted, marginTop: 6 },
 });
+

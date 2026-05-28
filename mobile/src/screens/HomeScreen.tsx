@@ -171,3 +171,4 @@ const styles = StyleSheet.create({
   error: { color: colors.error, paddingHorizontal: 16 },
   empty: { color: colors.muted, paddingHorizontal: 16 },
 });
+

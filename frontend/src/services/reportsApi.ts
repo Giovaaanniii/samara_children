@@ -19,3 +19,4 @@ export const reportsApi = {
   deleteGuideRefusal: (scheduleId: number) =>
     api.delete<void>(`/reports/admin/guide-refusals/${scheduleId}`),
 };
+

@@ -141,3 +141,4 @@ export function useAuth(): AuthContextValue {
   if (!ctx) throw new Error("useAuth вне AuthProvider");
   return ctx;
 }
+

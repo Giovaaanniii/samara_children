@@ -1,4 +1,3 @@
-/* --- Таблица «Цифры» --- */
 
 .numbersTableWrap {
   width: 100%;
@@ -18,3 +17,4 @@
 .numbersTableWrap :global(.ant-table-thead > tr > th) {
   font-weight: 600;
 }
+

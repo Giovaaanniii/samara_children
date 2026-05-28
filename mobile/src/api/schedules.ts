@@ -6,3 +6,4 @@ export const schedulesApi = {
   getBookingContext: (scheduleId: number) =>
     api.get<ScheduleBookingInfo>(`/schedules/${scheduleId}`),
 };
+

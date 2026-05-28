@@ -1,4 +1,4 @@
-/* Звёзды в таблице не переносятся на «лесенку» */
+
 .starsLine {
   display: inline-flex;
   align-items: center;
@@ -52,7 +52,6 @@
   margin: 0 !important;
 }
 
-/* Ant Design: убираем лишние отступы между звёздами, чтобы строка не ломалась */
 .critStars :global(.ant-rate-star:not(:last-child)) {
   margin-inline-end: 2px;
 }
@@ -60,3 +59,4 @@
 .compactRate :global(.ant-rate-star:not(:last-child)) {
   margin-inline-end: 2px;
 }
+

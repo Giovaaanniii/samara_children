@@ -52,3 +52,4 @@ export function EventCard({ event }: Props) {
     </Link>
   );
 }
+

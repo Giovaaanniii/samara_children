@@ -19,3 +19,4 @@ export type RootStackParamList = {
     | undefined;
   Register: undefined;
 };
+

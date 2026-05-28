@@ -1,6 +1,5 @@
 import { create } from "zustand";
 
-/** Черновик бронирования на UI (выбранный сеанс и т.д.) */
 interface BookingUiState {
   selectedScheduleId: number | null;
   selectedEventId: number | null;
@@ -15,3 +14,4 @@ export const useBookingStore = create<BookingUiState>((set) => ({
     set({ selectedEventId: eventId, selectedScheduleId: scheduleId }),
   reset: () => set({ selectedEventId: null, selectedScheduleId: null }),
 }));
+

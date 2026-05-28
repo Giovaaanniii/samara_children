@@ -27,3 +27,4 @@ export const eventsApi = {
 
   popularNow: () => api.get<EventRecord[]>("/events/popular-now"),
 };
+

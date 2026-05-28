@@ -18,3 +18,4 @@ export const bookingsApi = {
 
   getById: (id: number) => api.get<BookingDetail>(`/bookings/${id}`),
 };
+

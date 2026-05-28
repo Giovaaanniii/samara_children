@@ -34,3 +34,4 @@ export default function AdminRoute({ children }: Props) {
   }
   return children;
 }
+

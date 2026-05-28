@@ -147,3 +147,4 @@ const styles = StyleSheet.create({
   btnOff: { opacity: 0.6 },
   btnText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 });
+

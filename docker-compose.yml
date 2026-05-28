@@ -42,7 +42,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    # Весь репозиторий: alembic.ini и alembic/ лежат в корне проекта, не в backend/
     working_dir: /srv/backend
     volumes:
       - .:/srv
@@ -68,7 +67,6 @@ services:
       - backend
     volumes:
       - ./frontend:/app
-    # Зависимости подтягиваем при старте: иначе том node_modules с устаревшим набором пакетов ломал resolve (antd и др.)
     command:
       [
         "sh",

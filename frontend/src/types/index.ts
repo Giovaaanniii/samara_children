@@ -1,4 +1,3 @@
-/** Типы, согласованные с backend (Pydantic). */
 
 export type UserRole = "client" | "admin" | "guide";
 
@@ -28,7 +27,7 @@ export interface User {
   patronymic: string | null;
   phone: string | null;
   avatar_url: string | null;
-  /** Связь с таблицей guides для роли guide */
+
   guide_id: number | null;
   is_active: boolean;
 }
@@ -133,7 +132,7 @@ export interface Guide {
   specialization: string | null;
   hire_date: string | null;
   is_active: boolean;
-  /** Средняя оценка гида из опубликованных отзывов (API /guides) */
+
   average_guide_rating?: number | null;
   guide_reviews_count?: number;
 }
@@ -152,7 +151,6 @@ export interface GuideCreatePayload {
 
 export type GuideUpdatePayload = Partial<GuideCreatePayload>;
 
-/** Элемент GET /guides/my/schedule */
 export interface GuideScheduleBookingBrief {
   booking_id: number;
   status: BookingStatus;
@@ -204,7 +202,6 @@ export interface GuideGroupResponse {
   }[];
 }
 
-/** Публичный ответ GET /schedules/:id для страницы бронирования */
 export interface ScheduleBookingInfo {
   id: number;
   event_id: number;
@@ -221,9 +218,9 @@ export interface Review {
   user_id: number;
   event_id: number;
   booking_id: number;
-  /** Целое среднее по критериям (1–5), для совместимости */
+
   rating: number;
-  /** Среднее по критериям — для отображения звёзд (половинки) */
+
   average_rating: number;
   comment: string | null;
   guide_rating: number | null;
@@ -293,12 +290,11 @@ export interface BookingResponse {
   payment_url?: string | null;
   payment_id?: string | null;
   booking_id?: number;
-  /** Список «Мои бронирования» */
+
   event_title?: string | null;
   schedule_start_datetime?: string | null;
 }
 
-/** GET /bookings/:id/status — лёгкий ответ для опроса после ЮKassa */
 export interface BookingStatusSnapshot {
   id: number;
   status: BookingStatus;
@@ -366,7 +362,6 @@ export interface AdminReports {
   popular_events: PopularEventPoint[];
 }
 
-/** GET /reports/admin/calendar */
 export interface AdminCalendarDayItem {
   date: string;
   confirmed_booking_count: number;
@@ -379,7 +374,6 @@ export interface AdminCalendarResponse {
   days: AdminCalendarDayItem[];
 }
 
-/** GET /reports/admin/guide-refusals */
 export interface AdminGuideRefusalItem {
   schedule_id: number;
   event_id: number;
@@ -391,7 +385,6 @@ export interface AdminGuideRefusalItem {
   guide_name: string;
 }
 
-/** GET /guides/my/rating */
 export interface GuideRatingReviewItem {
   review_id: number;
   event_id: number;
@@ -410,3 +403,4 @@ export interface GuideRatingResponse {
   reviews_count: number;
   reviews: GuideRatingReviewItem[];
 }
+

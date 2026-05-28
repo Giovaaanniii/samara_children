@@ -17,3 +17,4 @@ export const authApi = {
 
   updateMe: (body: UserUpdate) => api.put<User>("/auth/me", body),
 };
+

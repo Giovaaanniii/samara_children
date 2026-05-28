@@ -1,4 +1,3 @@
-/** Подмножество типов бэкенда (см. frontend/src/types). */
 
 export type UserRole = "client" | "admin" | "guide";
 
@@ -192,7 +191,6 @@ export interface UserUpdate {
   phone?: string | null;
 }
 
-/** Элемент GET /guides/my/schedule */
 export interface GuideScheduleBookingBrief {
   booking_id: number;
   status: BookingStatus;
@@ -262,3 +260,4 @@ export interface GuideRatingResponse {
   reviews_count: number;
   reviews: GuideRatingReviewItem[];
 }
+

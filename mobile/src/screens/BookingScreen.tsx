@@ -331,3 +331,4 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#fff", fontWeight: "700" },
 });
+

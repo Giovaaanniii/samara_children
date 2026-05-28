@@ -42,3 +42,4 @@ export const guidesApi = {
 
   myRating: () => api.get<GuideRatingResponse>("/guides/my/rating"),
 };
+

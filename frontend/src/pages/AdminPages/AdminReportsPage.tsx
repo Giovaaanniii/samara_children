@@ -20,7 +20,6 @@ function periodQuery(range: [Dayjs, Dayjs] | null) {
   };
 }
 
-/** Таблица с теми же данными — только цифры; названия с переносом, без сжатия в «М…». */
 function PopularEventsNumbersTable({ rows }: { rows: PopularEventPoint[] }) {
   if (!rows.length) {
     return <Text type="secondary">Нет данных по оплаченным/подтверждённым бронированиям за выбранные условия.</Text>;
@@ -74,9 +73,9 @@ export default function AdminReportsPage() {
   const [data, setData] = useState<AdminReports | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  /** Диапазон в интерфейсе (может быть выбран до нажатия «Показать»). */
+
   const [rangeDraft, setRangeDraft] = useState<[Dayjs, Dayjs] | null>(null);
-  /** Учтённый в последнем запросе период; null — без фильтра (всё время). */
+
   const [appliedRange, setAppliedRange] = useState<[Dayjs, Dayjs] | null>(null);
 
   const fetchSummary = useCallback(async (range: [Dayjs, Dayjs] | null) => {
@@ -192,7 +191,7 @@ export default function AdminReportsPage() {
           <Col span={24}>
             <Card title="Цифры по мероприятиям">
               <Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
-             
+
               </Text>
               <PopularEventsNumbersTable rows={data.popular_events} />
             </Card>
@@ -202,3 +201,4 @@ export default function AdminReportsPage() {
     </div>
   );
 }
+

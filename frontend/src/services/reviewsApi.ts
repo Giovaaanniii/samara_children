@@ -26,3 +26,4 @@ export const reviewsApi = {
       params: eventId ? { event_id: eventId } : undefined,
     }),
 };
+
