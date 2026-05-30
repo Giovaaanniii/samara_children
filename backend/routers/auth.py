@@ -14,13 +14,14 @@ from auth import create_access_token, get_current_user, hash_password, verify_pa
 from config import settings
 from database import get_db
 from models import User, UserRole
-from schemas import LoginRequest, Token, UserCreate, UserResponse, UserUpdate, VkExchangeRequest, VkLoginUrlResponse
+from schemas import LoginRequest, Token, UserCreate, UserResponse, UserUpdate, VkExchangeRequest, VkIdSessionRequest, VkLoginUrlResponse
 from services.guide_account import ensure_guide_profile
 router = APIRouter(prefix='/auth', tags=['Авторизация'])
 VK_OAUTH_AUTHORIZE_URL = 'https://oauth.vk.com/authorize'
 VK_OAUTH_ACCESS_TOKEN_URL = 'https://oauth.vk.com/access_token'
 VK_API_USERS_GET_URL = 'https://api.vk.com/method/users.get'
 VK_API_VERSION = '5.199'
+VK_ID_USER_INFO_URL = 'https://id.vk.ru/oauth2/user_info'
 VK_STATE_TTL_SECONDS = 15 * 60
 
 def _make_token(user: User) -> Token:
@@ -60,6 +61,23 @@ def _build_vk_state(redirect: str) -> str:
         safe_redirect = '/profile'
     payload = f'{int(datetime.now(timezone.utc).timestamp())}:{safe_redirect}'
     return _sign_state(payload)
+
+async def _fetch_vk_id_profile(access_token: str) -> tuple[int, str | None, str | None, str | None]:
+    if not settings.VK_CLIENT_ID:
+        raise HTTPException(status_code=500, detail='VK ID не настроен на сервере')
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        profile_resp = await client.post(VK_ID_USER_INFO_URL, data={'client_id': settings.VK_CLIENT_ID, 'access_token': access_token}, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        profile_data = profile_resp.json()
+        if profile_resp.status_code >= 400 or profile_data.get('error'):
+            raise HTTPException(status_code=400, detail='VK ID не вернул профиль пользователя')
+        user = profile_data.get('user') or {}
+        user_id = user.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail='VK ID не вернул идентификатор пользователя')
+        email = user.get('email')
+        if isinstance(email, str) and email.strip() == '':
+            email = None
+        return (int(user_id), email, user.get('first_name'), user.get('last_name'))
 
 async def _fetch_vk_profile(code: str) -> tuple[int, str | None, str | None, str | None]:
     if not settings.VK_CLIENT_ID or not settings.VK_CLIENT_SECRET or (not settings.VK_REDIRECT_URI):
@@ -132,6 +150,15 @@ async def vk_login_url(redirect: str='/profile') -> VkLoginUrlResponse:
     state = _build_vk_state(redirect)
     query = urlencode({'client_id': settings.VK_CLIENT_ID, 'redirect_uri': settings.VK_REDIRECT_URI, 'response_type': 'code', 'scope': 'email', 'state': state, 'v': VK_API_VERSION})
     return VkLoginUrlResponse(authorization_url=f'{VK_OAUTH_AUTHORIZE_URL}?{query}', state=state)
+
+@router.post('/vk/id-session', response_model=Token, summary='Вход через VK ID (One Tap)')
+async def vk_id_session(body: VkIdSessionRequest, db: Annotated[AsyncSession, Depends(get_db)]) -> Token:
+    vk_user_id, email, first_name, last_name = await _fetch_vk_id_profile(body.access_token)
+    user = await _upsert_user_by_vk(db, vk_user_id=vk_user_id, email=email, first_name=first_name, last_name=last_name)
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Учётная запись отключена')
+    user = await ensure_guide_profile(db, user)
+    return _make_token(user)
 
 @router.post('/vk/exchange', response_model=Token, summary='Завершение входа через VK')
 async def vk_exchange(body: VkExchangeRequest, db: Annotated[AsyncSession, Depends(get_db)]) -> Token:

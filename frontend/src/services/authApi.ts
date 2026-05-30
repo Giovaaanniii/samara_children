@@ -21,6 +21,9 @@ export const authApi = {
   vkExchange: (body: { code: string; state: string }) =>
     api.post<TokenResponse>("/auth/vk/exchange", body),
 
+  vkIdSession: (body: { access_token: string }) =>
+    api.post<TokenResponse>("/auth/vk/id-session", body),
+
   register: (body: UserCreate) => api.post<User>("/auth/register", body),
 
   me: () => api.get<User>("/auth/me"),

@@ -48,6 +48,9 @@ class VkExchangeRequest(BaseModel):
     code: str = Field(..., min_length=1)
     state: str = Field(..., min_length=1)
 
+class VkIdSessionRequest(BaseModel):
+    access_token: str = Field(..., min_length=1)
+
 class LoginRequest(BaseModel):
     login: str = Field(..., min_length=1, max_length=255, description='Логин или email')
     password: str = Field(..., min_length=1, max_length=128)
