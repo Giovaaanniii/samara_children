@@ -34,9 +34,7 @@ export default function AboutPage() {
               alt="Изображение компании"
               className={styles.image}
             />
-            <Text type="secondary" className={styles.imageHint}>
-              Вы можете заменить это изображение на любое своё.
-            </Text>
+
           </Card>
         </Col>
         <Col xs={24} md={14}>
