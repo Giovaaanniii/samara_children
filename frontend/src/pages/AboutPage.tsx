@@ -11,13 +11,12 @@ import styles from "./AboutPage.module.css";
 
 const { Title, Paragraph, Text } = Typography;
 
-const COMPANY_NAME =
-  'ООО «САМАРСКОЕ ЭКСКУРСИОННОЕ БЮРО «САМАРА ДЕТЯМ»»';
-const COMPANY_INN = '6318044674';
-const COMPANY_OGRN = '1196313024390';
-const COMPANY_ADDRESS =
-  '443022, Самарская область, г. Самара, ш. Заводское, д. 13Б, этаж 4, офис 405';
-const COMPANY_EMAIL = 'samaradetyam@mail.ru';
+import {
+  OPERATOR_BRAND,
+  OPERATOR_EMAIL,
+  OPERATOR_FIO,
+  OPERATOR_INN,
+} from "../content/legalOperator";
 
 export default function AboutPage() {
   return (
@@ -99,25 +98,25 @@ export default function AboutPage() {
         <Divider style={{ marginTop: 0 }} />
         <div className={styles.requisites}>
           <Paragraph className={styles.requisiteRow}>
-            <Text strong>Наименование: </Text>
-            {COMPANY_NAME}
+            <Text strong>ФИО: </Text>
+            {OPERATOR_FIO}
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>Статус: </Text>
+            Самозанятый (налог на профессиональный доход)
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>Проект: </Text>
+            {OPERATOR_BRAND}
           </Paragraph>
           <Paragraph className={styles.requisiteRow}>
             <Text strong>ИНН: </Text>
-            {COMPANY_INN}
-          </Paragraph>
-          <Paragraph className={styles.requisiteRow}>
-            <Text strong>ОГРН: </Text>
-            {COMPANY_OGRN}
-          </Paragraph>
-          <Paragraph className={styles.requisiteRow}>
-            <Text strong>Юридический адрес: </Text>
-            {COMPANY_ADDRESS}
+            {OPERATOR_INN}
           </Paragraph>
           <Paragraph className={styles.requisiteRow}>
             <Text strong>E-mail: </Text>
-            <a href={`mailto:${COMPANY_EMAIL}`} className={styles.contactPhone}>
-              {COMPANY_EMAIL}
+            <a href={`mailto:${OPERATOR_EMAIL}`} className={styles.contactPhone}>
+              {OPERATOR_EMAIL}
             </a>
           </Paragraph>
         </div>
