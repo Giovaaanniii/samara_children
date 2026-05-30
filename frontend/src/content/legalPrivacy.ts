@@ -6,7 +6,7 @@ const COMPANY_INN = '6318044674';
 const COMPANY_OGRN = '1196313024390';
 const COMPANY_ADDRESS =
   '443022, Самарская область, г. Самара, ш. Заводское, д. 13Б, этаж 4, офис 405';
-const COMPANY_EMAIL = 'info@samaradetyam.online';
+const COMPANY_EMAIL = 'samaradetyam@mail.ru';
 const COMPANY_PHONE = '+7 (960) 829-14-55';
 const DOC_DATE = '30.05.2026';
 
