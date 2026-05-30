@@ -25,10 +25,10 @@ export const bookingsApi = {
 
   getById: (id: number) => api.get<BookingDetail>(`/bookings/${id}`),
 
-  /** Опрос статуса после редиректа с оплаты (без тяжёлых связей) */
   getStatus: (id: number) =>
     api.get<BookingStatusSnapshot>(`/bookings/${id}/status`),
 
   cancel: (id: number) =>
     api.post<BookingCancelResponse>(`/bookings/${id}/cancel`),
 };
+

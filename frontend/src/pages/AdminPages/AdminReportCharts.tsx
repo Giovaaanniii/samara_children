@@ -50,7 +50,6 @@ type Props = {
   rows: PopularEventPoint[];
 };
 
-/** Три разных типа диаграмм по данным топа мероприятий. */
 export default function AdminReportCharts({ rows }: Props) {
   const pieData = useMemo(
     () =>
@@ -227,3 +226,4 @@ export default function AdminReportCharts({ rows }: Props) {
     </div>
   );
 }
+

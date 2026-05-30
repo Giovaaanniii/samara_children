@@ -24,7 +24,6 @@ import styles from "./AdminProfileCalendar.module.css";
 
 const { Text, Paragraph } = Typography;
 
-/** Дни с подтверждёнными бронями (сеанс не завершён / не отменён). */
 export default function AdminProfileCalendar() {
   const [month, setMonth] = useState(() => dayjs().startOf("month"));
   const [loading, setLoading] = useState(false);
@@ -251,3 +250,4 @@ export default function AdminProfileCalendar() {
     </>
   );
 }
+

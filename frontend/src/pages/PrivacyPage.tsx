@@ -1,20 +1,13 @@
-import { Typography } from "antd";
+import LegalDocumentView from "../components/LegalDocumentView";
+import { privacySections } from "../content/legalPrivacy";
 
-import styles from "./LegalDocumentPage.module.css";
-
-const { Title, Paragraph } = Typography;
-
-/** Политика конфиденциальности — текст добавьте позже. */
 export default function PrivacyPage() {
   return (
-    <div className={styles.wrap}>
-      <Title level={1} className={styles.title}>
-        Политика конфиденциальности
-      </Title>
-      <Paragraph type="secondary">
-        Здесь будет политика обработки персональных данных. Раздел можно заполнить
-        позже.
-      </Paragraph>
-    </div>
+    <LegalDocumentView
+      pageTitle="Политика обработки персональных данных"
+      intro="Политика разработана в соответствии с Федеральным законом № 152-ФЗ «О персональных данных» и определяет цели, состав, порядок обработки и права субъектов персональных данных при использовании платформы «Самара Детям»."
+      sections={privacySections}
+    />
   );
 }
+

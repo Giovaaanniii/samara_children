@@ -1,6 +1,5 @@
 import type { BookingStatus, EventCategory, EventStatus, ScheduleStatus } from "../types";
 
-/** Подписи значений для админ-панели (на русском). */
 export const eventCategoryLabels: Record<EventCategory, string> = {
   excursion: "Экскурсия",
   quest: "Квест",
@@ -42,3 +41,4 @@ export const scheduleStatusOptions = (Object.entries(scheduleStatusLabels) as [S
 export const bookingStatusOptions = (Object.entries(bookingStatusLabels) as [BookingStatus, string][]).map(
   ([value, label]) => ({ value, label }),
 );
+

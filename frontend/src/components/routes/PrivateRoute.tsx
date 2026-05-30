@@ -26,3 +26,4 @@ export default function PrivateRoute({ children }: Props) {
   }
   return children;
 }
+

@@ -1,285 +1,117 @@
 from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from auth import get_current_admin
 from database import get_db
 from models import Booking, Event, Guide, Schedule, User
-from schemas import (
-    ScheduleBookingInfoResponse,
-    ScheduleCreate,
-    ScheduleResponse,
-    ScheduleUpdate,
-)
-from services.schedule_notifications import (
-    notify_booking_users_schedule_changed,
-    notify_guide_schedule_changed,
-)
+from schemas import ScheduleBookingInfoResponse, ScheduleCreate, ScheduleResponse, ScheduleUpdate
+from services.schedule_notifications import notify_booking_users_schedule_changed, notify_guide_schedule_changed
+router = APIRouter(prefix='/schedules', tags=['Расписание'])
 
-router = APIRouter(prefix="/schedules", tags=["Расписание"])
-
-
-async def _guide_schedule_overlaps(
-    db: AsyncSession,
-    guide_id: int,
-    start: datetime,
-    end: datetime,
-    exclude_schedule_id: int | None = None,
-) -> bool:
-    q = select(Schedule.id).where(
-        Schedule.guide_id == guide_id,
-        Schedule.start_datetime < end,
-        Schedule.end_datetime > start,
-    )
+async def _guide_schedule_overlaps(db: AsyncSession, guide_id: int, start: datetime, end: datetime, exclude_schedule_id: int | None=None) -> bool:
+    q = select(Schedule.id).where(Schedule.guide_id == guide_id, Schedule.start_datetime < end, Schedule.end_datetime > start)
     if exclude_schedule_id is not None:
         q = q.where(Schedule.id != exclude_schedule_id)
     r = await db.execute(q.limit(1))
     return r.scalar_one_or_none() is not None
 
-
 async def _count_bookings(db: AsyncSession, schedule_id: int) -> int:
-    cnt = await db.scalar(
-        select(func.count()).select_from(Booking).where(Booking.schedule_id == schedule_id),
-    )
+    cnt = await db.scalar(select(func.count()).select_from(Booking).where(Booking.schedule_id == schedule_id))
     return int(cnt or 0)
 
-
-@router.get(
-    "",
-    response_model=list[ScheduleResponse],
-    summary="Список сеансов",
-    description="Возвращает расписание сеансов. Можно фильтровать по мероприятию и дате.",
-)
-async def list_schedules(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    event_id: int | None = Query(None, ge=1, description="Фильтр по мероприятию"),
-    on_date: date | None = Query(
-        None,
-        description="День (UTC): сеансы, пересекающиеся с этими сутками",
-    ),
-) -> list[Schedule]:
+@router.get('', response_model=list[ScheduleResponse], summary='Список сеансов', description='Возвращает расписание сеансов. Можно фильтровать по мероприятию и дате.')
+async def list_schedules(db: Annotated[AsyncSession, Depends(get_db)], event_id: int | None=Query(None, ge=1, description='Фильтр по мероприятию'), on_date: date | None=Query(None, description='День (UTC): сеансы, пересекающиеся с этими сутками')) -> list[Schedule]:
     now_utc = datetime.now(timezone.utc)
-    stmt = (
-        select(Schedule)
-        .where(Schedule.end_datetime > now_utc)
-        .order_by(Schedule.start_datetime)
-    )
+    stmt = select(Schedule).where(Schedule.end_datetime > now_utc).order_by(Schedule.start_datetime)
     if event_id is not None:
         stmt = stmt.where(Schedule.event_id == event_id)
     if on_date is not None:
         day_start = datetime.combine(on_date, time.min, tzinfo=timezone.utc)
         day_end = day_start + timedelta(days=1)
-        stmt = stmt.where(
-            Schedule.start_datetime < day_end,
-            Schedule.end_datetime > day_start,
-        )
+        stmt = stmt.where(Schedule.start_datetime < day_end, Schedule.end_datetime > day_start)
     result = await db.execute(stmt)
     return list(result.scalars().all())
 
-
-@router.get(
-    "/{schedule_id}",
-    response_model=ScheduleBookingInfoResponse,
-    summary="Сеанс для бронирования",
-    description="Возвращает краткие данные сеанса и мероприятия для страницы оформления бронирования.",
-)
-async def get_schedule_for_booking(
-    schedule_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> ScheduleBookingInfoResponse:
+@router.get('/{schedule_id}', response_model=ScheduleBookingInfoResponse, summary='Сеанс для бронирования', description='Возвращает краткие данные сеанса и мероприятия для страницы оформления бронирования.')
+async def get_schedule_for_booking(schedule_id: int, db: Annotated[AsyncSession, Depends(get_db)]) -> ScheduleBookingInfoResponse:
     schedule = await db.get(Schedule, schedule_id)
     if schedule is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Сеанс не найден",
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сеанс не найден')
     now_utc = datetime.now(timezone.utc)
     if schedule.end_datetime <= now_utc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Сеанс неактуален для бронирования",
-        )
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сеанс неактуален для бронирования')
     event = await db.get(Event, schedule.event_id)
     if event is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Мероприятие не найдено",
-        )
-    return ScheduleBookingInfoResponse(
-        id=schedule.id,
-        event_id=schedule.event_id,
-        event_title=event.title,
-        base_price=event.base_price,
-        start_datetime=schedule.start_datetime,
-        end_datetime=schedule.end_datetime,
-        available_slots=schedule.available_slots,
-        status=schedule.status,
-    )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Мероприятие не найдено')
+    return ScheduleBookingInfoResponse(id=schedule.id, event_id=schedule.event_id, event_title=event.title, base_price=event.base_price, start_datetime=schedule.start_datetime, end_datetime=schedule.end_datetime, available_slots=schedule.available_slots, status=schedule.status)
 
-
-@router.post(
-    "",
-    response_model=ScheduleResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Создать сеанс",
-    description="Создаёт новый сеанс мероприятия с проверкой пересечений расписания гида. Доступно только администратору.",
-)
-async def create_schedule(
-    data: ScheduleCreate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(get_current_admin)],
-) -> Schedule:
+@router.post('', response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED, summary='Создать сеанс', description='Создаёт новый сеанс мероприятия с проверкой пересечений расписания гида. Доступно только администратору.')
+async def create_schedule(data: ScheduleCreate, db: Annotated[AsyncSession, Depends(get_db)], _: Annotated[User, Depends(get_current_admin)]) -> Schedule:
     ev = await db.get(Event, data.event_id)
     if ev is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Мероприятие не найдено",
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Мероприятие не найдено')
     if data.guide_id is not None:
         gd = await db.get(Guide, data.guide_id)
         if gd is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Гид не найден",
-            )
-        if await _guide_schedule_overlaps(
-            db,
-            data.guide_id,
-            data.start_datetime,
-            data.end_datetime,
-            None,
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="У гида уже есть пересекающийся сеанс в это время",
-            )
-
-    schedule = Schedule(
-        event_id=data.event_id,
-        start_datetime=data.start_datetime,
-        end_datetime=data.end_datetime,
-        available_slots=data.available_slots,
-        status=data.status,
-        guide_id=data.guide_id,
-    )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Гид не найден')
+        if await _guide_schedule_overlaps(db, data.guide_id, data.start_datetime, data.end_datetime, None):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='У гида уже есть пересекающийся сеанс в это время')
+    schedule = Schedule(event_id=data.event_id, start_datetime=data.start_datetime, end_datetime=data.end_datetime, available_slots=data.available_slots, status=data.status, guide_id=data.guide_id)
     db.add(schedule)
     await db.commit()
     await db.refresh(schedule)
     return schedule
 
-
-@router.put(
-    "/{schedule_id}",
-    response_model=ScheduleResponse,
-    summary="Обновить сеанс",
-    description="Обновляет параметры сеанса. При значимых изменениях отправляет уведомления пользователям. Доступно только администратору.",
-)
-async def update_schedule(
-    schedule_id: int,
-    data: ScheduleUpdate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(get_current_admin)],
-) -> Schedule:
+@router.put('/{schedule_id}', response_model=ScheduleResponse, summary='Обновить сеанс', description='Обновляет параметры сеанса. При значимых изменениях отправляет уведомления пользователям. Доступно только администратору.')
+async def update_schedule(schedule_id: int, data: ScheduleUpdate, db: Annotated[AsyncSession, Depends(get_db)], _: Annotated[User, Depends(get_current_admin)]) -> Schedule:
     schedule = await db.get(Schedule, schedule_id)
     if schedule is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Сеанс не найден",
-        )
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сеанс не найден')
     payload = data.model_dump(exclude_unset=True)
     if not payload:
         return schedule
-
     old_start = schedule.start_datetime
     old_end = schedule.end_datetime
     old_slots = schedule.available_slots
     old_status = schedule.status
     old_guide = schedule.guide_id
-
-    new_start = payload.get("start_datetime", schedule.start_datetime)
-    new_end = payload.get("end_datetime", schedule.end_datetime)
+    new_start = payload.get('start_datetime', schedule.start_datetime)
+    new_end = payload.get('end_datetime', schedule.end_datetime)
     if new_end <= new_start:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="end_datetime должно быть позже start_datetime",
-        )
-
-    new_guide_id = payload["guide_id"] if "guide_id" in payload else schedule.guide_id
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='end_datetime должно быть позже start_datetime')
+    new_guide_id = payload['guide_id'] if 'guide_id' in payload else schedule.guide_id
     if new_guide_id is not None:
         gd = await db.get(Guide, new_guide_id)
         if gd is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Гид не найден",
-            )
-        if await _guide_schedule_overlaps(
-            db,
-            new_guide_id,
-            new_start,
-            new_end,
-            schedule_id,
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="У гида уже есть пересекающийся сеанс в это время",
-            )
-
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Гид не найден')
+        if await _guide_schedule_overlaps(db, new_guide_id, new_start, new_end, schedule_id):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='У гида уже есть пересекающийся сеанс в это время')
     for key, val in payload.items():
         setattr(schedule, key, val)
-
-    if "guide_id" in payload and schedule.guide_id != old_guide:
+    if 'guide_id' in payload and schedule.guide_id != old_guide:
         schedule.guide_rejected_at = None
         schedule.guide_reject_reason = None
         schedule.rejected_by_guide_id = None
         schedule.guide_confirmed_at = None
         schedule.guide_completed_at = None
-
     await db.commit()
     await db.refresh(schedule)
-
-    relevant_change = (
-        schedule.start_datetime != old_start
-        or schedule.end_datetime != old_end
-        or schedule.available_slots != old_slots
-        or schedule.status != old_status
-        or schedule.guide_id != old_guide
-    )
+    relevant_change = schedule.start_datetime != old_start or schedule.end_datetime != old_end or schedule.available_slots != old_slots or (schedule.status != old_status) or (schedule.guide_id != old_guide)
     if relevant_change and await _count_bookings(db, schedule_id) > 0:
         await notify_booking_users_schedule_changed(db, schedule)
     if relevant_change:
         await notify_guide_schedule_changed(db, schedule)
-
     return schedule
 
-
-@router.delete(
-    "/{schedule_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Удалить сеанс",
-    description="Удаляет сеанс, если для него нет бронирований. Доступно только администратору.",
-)
-async def delete_schedule(
-    schedule_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(get_current_admin)],
-) -> None:
+@router.delete('/{schedule_id}', status_code=status.HTTP_204_NO_CONTENT, summary='Удалить сеанс', description='Удаляет сеанс, если для него нет бронирований. Доступно только администратору.')
+async def delete_schedule(schedule_id: int, db: Annotated[AsyncSession, Depends(get_db)], _: Annotated[User, Depends(get_current_admin)]) -> None:
     schedule = await db.get(Schedule, schedule_id)
     if schedule is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Сеанс не найден",
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сеанс не найден')
     if await _count_bookings(db, schedule_id) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Нельзя удалить сеанс с существующими бронированиями",
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Нельзя удалить сеанс с существующими бронированиями')
     await db.execute(delete(Schedule).where(Schedule.id == schedule_id))
     await db.commit()

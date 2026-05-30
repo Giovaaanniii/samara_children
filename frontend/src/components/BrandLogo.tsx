@@ -1,12 +1,11 @@
 import type { ImgHTMLAttributes } from "react";
 
 type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "onError"> & {
-  /** Путь к растровому логотипу в `public/` */
+
   pngSrc?: string;
   fallbackSrc?: string;
 };
 
-/** Логотип из `public/logo.png` с запасным `logo.svg`. */
 export default function BrandLogo({
   pngSrc = "/logo.png",
   fallbackSrc = "/logo.svg",
@@ -28,3 +27,4 @@ export default function BrandLogo({
     />
   );
 }
+

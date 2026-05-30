@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { authApi } from "../services/authApi";
 import type { User, UserCreate } from "../types";
 
-/** Ключ access token в localStorage */
 export const ACCESS_TOKEN_KEY = "samara_access_token";
 
 function readTokenFromStorage(): string | null {
@@ -29,7 +28,6 @@ interface AuthState {
   setUser: (user: User) => void;
 }
 
-/** Пока токен в storage не проверен через /me — не считаем сессию «пустой» (избегаем ложного редиректа на /login). */
 const initialToken = readTokenFromStorage();
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -103,3 +101,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 }));
+

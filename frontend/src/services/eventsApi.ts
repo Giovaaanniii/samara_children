@@ -30,3 +30,4 @@ export const eventsApi = {
   adminPopularNowSet: (event_ids: number[]) =>
     api.put<EventRecord[]>("/events/admin/popular-now", { event_ids }),
 };
+

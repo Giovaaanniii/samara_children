@@ -1,19 +1,13 @@
-import { Typography } from "antd";
+import LegalDocumentView from "../components/LegalDocumentView";
+import { offerSections } from "../content/legalOffer";
 
-import styles from "./LegalDocumentPage.module.css";
-
-const { Title, Paragraph } = Typography;
-
-/** Публичная оферта — текст добавьте позже. */
 export default function OfferPage() {
   return (
-    <div className={styles.wrap}>
-      <Title level={1} className={styles.title}>
-        Договор оферты
-      </Title>
-      <Paragraph type="secondary">
-        Здесь будет полный текст договора оферты. Раздел можно заполнить позже.
-      </Paragraph>
-    </div>
+    <LegalDocumentView
+      pageTitle="Публичная оферта"
+      intro="Настоящая оферта регулирует использование платформы «Самара Детям», порядок бронирования и оплаты, а также разграничивает ответственность оператора информационного сервиса и экскурсионного бюро — исполнителя услуг."
+      sections={offerSections}
+    />
   );
 }
+

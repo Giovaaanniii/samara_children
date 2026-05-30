@@ -200,3 +200,4 @@ export function BookingForm({ schedule, submitting, onPay }: Props) {
     </form>
   );
 }
+

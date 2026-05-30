@@ -1,9 +1,5 @@
 import CryptoJS from "crypto-js";
 
-/**
- * Клиентское шифрование удобно для скрытия данных в канале/логах,
- * но не заменяет TLS и не подходит как единственная защита.
- */
 const ENV_SECRET = import.meta.env.VITE_CRYPTO_SECRET_KEY?.trim();
 
 function resolveSecret(secret?: string): string {

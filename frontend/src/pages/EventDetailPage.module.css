@@ -76,7 +76,6 @@
   white-space: nowrap;
 }
 
-/* Итоговая оценка в карточке отзыва */
 .reviewOverallBlock {
   margin-top: 12px;
   padding: 14px 16px;
@@ -130,7 +129,6 @@
   color: #6b4a4a;
 }
 
-/* Форма: превью итоговой оценки */
 .reviewFormPreview {
   margin-bottom: 16px;
   padding: 14px 16px;
@@ -150,3 +148,4 @@
 .reviewFormPreviewStars {
   font-size: 24px !important;
 }
+

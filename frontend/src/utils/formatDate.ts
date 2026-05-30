@@ -21,3 +21,4 @@ export function formatDate(iso: string, locale = DEFAULT_LOCALE): string {
     year: "numeric",
   });
 }
+

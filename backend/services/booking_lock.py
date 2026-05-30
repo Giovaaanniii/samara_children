@@ -1,16 +1,8 @@
-"""Временная блокировка слотов бронирования в Redis."""
-
 from __future__ import annotations
-
 import redis.asyncio as redis
-
 LOCK_TTL_SEC = 15 * 60
-
-SLOTS_KEY = "schedule:slots:{schedule_id}"
-LOCK_KEY = "booking:lock:{schedule_id}:{user_id}"
-
-# Атомарно: SET lock NX, затем DECRBY слотов. Откат при ошибке — снаружи (INCRBY + DEL).
-
+SLOTS_KEY = 'schedule:slots:{schedule_id}'
+LOCK_KEY = 'booking:lock:{schedule_id}:{user_id}'
 
 async def ensure_slots_mirror(r: redis.Redis, schedule_id: int, db_available: int) -> None:
     key = SLOTS_KEY.format(schedule_id=schedule_id)
@@ -18,37 +10,22 @@ async def ensure_slots_mirror(r: redis.Redis, schedule_id: int, db_available: in
     if cur is None:
         await r.set(key, db_available)
 
-
-async def reserve_slots_and_lock(
-    r: redis.Redis,
-    schedule_id: int,
-    user_id: int,
-    need: int,
-) -> tuple[bool, str | None]:
-    """
-    Возвращает (успех, код_ошибки).
-    Коды: insufficient, lock_exists
-    """
+async def reserve_slots_and_lock(r: redis.Redis, schedule_id: int, user_id: int, need: int) -> tuple[bool, str | None]:
     slots_key = SLOTS_KEY.format(schedule_id=schedule_id)
     lock_k = LOCK_KEY.format(schedule_id=schedule_id, user_id=user_id)
-
     cur = await r.get(slots_key)
     if cur is None:
-        return False, "insufficient"
+        return (False, 'insufficient')
     if int(cur) < need:
-        return False, "insufficient"
-
+        return (False, 'insufficient')
     if await r.set(lock_k, str(need), nx=True, ex=LOCK_TTL_SEC) is None:
-        return False, "lock_exists"
-
+        return (False, 'lock_exists')
     new_val = await r.decrby(slots_key, need)
     if new_val < 0:
         await r.incrby(slots_key, need)
         await r.delete(lock_k)
-        return False, "insufficient"
-
-    return True, None
-
+        return (False, 'insufficient')
+    return (True, None)
 
 async def release_reservation(r: redis.Redis, schedule_id: int, user_id: int, need: int) -> None:
     slots_key = SLOTS_KEY.format(schedule_id=schedule_id)
@@ -56,20 +33,11 @@ async def release_reservation(r: redis.Redis, schedule_id: int, user_id: int, ne
     await r.incrby(slots_key, need)
     await r.delete(lock_k)
 
-
 async def clear_booking_lock_only(r: redis.Redis, schedule_id: int, user_id: int) -> None:
-    """После успешной оплаты: только снять lock, слоты в Redis уже уменьшены при бронировании."""
     lock_k = LOCK_KEY.format(schedule_id=schedule_id, user_id=user_id)
     await r.delete(lock_k)
 
-
-async def restore_slots_after_paid_cancel(
-    r: redis.Redis,
-    schedule_id: int,
-    need: int,
-    new_db_available: int,
-) -> None:
-    """После отмены подтверждённого бронирования: вернуть места в зеркале Redis."""
+async def restore_slots_after_paid_cancel(r: redis.Redis, schedule_id: int, need: int, new_db_available: int) -> None:
     slots_key = SLOTS_KEY.format(schedule_id=schedule_id)
     cur = await r.get(slots_key)
     if cur is None:

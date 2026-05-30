@@ -132,7 +132,6 @@
   background: rgba(184, 50, 50, 0.08);
 }
 
-/* Единый вид «Личный кабинет» и «Выйти» (ссылка и кнопка) */
 .headerAction {
   display: inline-flex;
   align-items: center;
@@ -221,3 +220,4 @@
 .mobileActionBtn:hover {
   background: rgba(184, 50, 50, 0.08);
 }
+

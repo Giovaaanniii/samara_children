@@ -8,3 +8,24 @@
   margin-top: 0 !important;
   margin-bottom: 16px !important;
 }
+
+.intro {
+  margin-bottom: 24px !important;
+}
+
+.section {
+  margin-bottom: 28px;
+}
+
+.sectionTitle {
+  margin-top: 8px !important;
+  margin-bottom: 12px !important;
+  font-size: 1.1rem !important;
+}
+
+.paragraph {
+  text-align: justify;
+  margin-bottom: 10px !important;
+  line-height: 1.65;
+}
+
