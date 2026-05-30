@@ -105,7 +105,7 @@ export default function Header() {
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         placement="left"
-        width={320}
+        size={320}
         title="Меню"
       >
         <div className={styles.mobileNav}>{navLinks}</div>
