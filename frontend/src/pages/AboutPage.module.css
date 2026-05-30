@@ -110,6 +110,20 @@
   font-size: 18px;
 }
 
+.requisites {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.requisiteRow {
+  margin-bottom: 0 !important;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+}
+
 .contacts {
   display: flex;
   flex-direction: column;

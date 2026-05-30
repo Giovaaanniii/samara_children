@@ -11,6 +11,14 @@ import styles from "./AboutPage.module.css";
 
 const { Title, Paragraph, Text } = Typography;
 
+const COMPANY_NAME =
+  'ООО «САМАРСКОЕ ЭКСКУРСИОННОЕ БЮРО «САМАРА ДЕТЯМ»»';
+const COMPANY_INN = '6318044674';
+const COMPANY_OGRN = '1196313024390';
+const COMPANY_ADDRESS =
+  '443022, Самарская область, г. Самара, ш. Заводское, д. 13Б, этаж 4, офис 405';
+const COMPANY_EMAIL = 'samaradetyam@mail.ru';
+
 export default function AboutPage() {
   return (
     <div className={styles.page}>
@@ -87,6 +95,35 @@ export default function AboutPage() {
       </Card>
 
       <Card className={styles.card}>
+        <Title level={4}>Реквизиты</Title>
+        <Divider style={{ marginTop: 0 }} />
+        <div className={styles.requisites}>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>Наименование: </Text>
+            {COMPANY_NAME}
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>ИНН: </Text>
+            {COMPANY_INN}
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>ОГРН: </Text>
+            {COMPANY_OGRN}
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>Юридический адрес: </Text>
+            {COMPANY_ADDRESS}
+          </Paragraph>
+          <Paragraph className={styles.requisiteRow}>
+            <Text strong>E-mail: </Text>
+            <a href={`mailto:${COMPANY_EMAIL}`} className={styles.contactPhone}>
+              {COMPANY_EMAIL}
+            </a>
+          </Paragraph>
+        </div>
+      </Card>
+
+      <Card className={styles.card}>
         <Title level={4}>Контактные данные</Title>
         <Divider style={{ marginTop: 0 }} />
         <div className={styles.contacts}>
@@ -113,8 +150,6 @@ export default function AboutPage() {
             </span>
           </div>
         </div>
-        <Text type="secondary">
-        </Text>
       </Card>
     </div>
   );
