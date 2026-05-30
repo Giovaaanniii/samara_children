@@ -72,3 +72,8 @@ Desktop.ini
 # Firebase / cloud keys (never commit)
 **/firebase-adminsdk*.json
 **/serviceAccount*.json
+
+../check.md
+../*.pdf
+./check.md
+check.md
