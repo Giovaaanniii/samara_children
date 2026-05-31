@@ -1,14 +1,14 @@
 """add guide workflow columns to schedules
 
 Revision ID: d4e5f6a7b8c9
-Revises: b12c3d4e5f60
+Revises: c0a1b2c3d4e5
 """
 from typing import Sequence, Union
 
 from alembic import op
 
 revision: str = 'd4e5f6a7b8c9'
-down_revision: Union[str, None] = 'b12c3d4e5f60'
+down_revision: Union[str, None] = 'c0a1b2c3d4e5'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
