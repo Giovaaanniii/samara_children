@@ -25,6 +25,7 @@ interface VkIdOneTapProps {
 function isBenignVkError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const e = error as { code?: number; text?: string };
+  if (e.code === 0 && e.text === "timeout") return true;
   if (e.code === 2 && e.text === "New tab has been closed") return true;
   if (e.text?.toLowerCase().includes("tab has been closed")) return true;
   return false;
@@ -39,13 +40,6 @@ function vkIdErrorMessage(error: unknown): string {
       error?: string;
       message?: string;
     };
-    if (e.code === 0 && e.text === "timeout") {
-      return (
-        "Виджет VK ID не загрузился. Проверьте блокировщик рекламы, " +
-        "настройки приложения VK ID (redirect https://samaradetyam.online/profile) " +
-        "и что сайт отдаётся production-сборкой, а не npm run dev."
-      );
-    }
     return (
       e.text ||
       e.error_description ||
