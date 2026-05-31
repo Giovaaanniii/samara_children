@@ -22,15 +22,16 @@ export default defineConfig(({ mode }) => {
         "www.samaradetyam.online",
         "2.26.22.99",
       ],
-      hmr: hmrDisabled
-        ? false
-        : hmrHost
-          ? {
-              host: hmrHost,
-              protocol: "wss",
-              clientPort: 443,
-            }
-          : true,
+      hmr:
+        hmrDisabled || env.VITE_HMR !== "true"
+          ? false
+          : hmrHost
+            ? {
+                host: hmrHost,
+                protocol: "wss",
+                clientPort: 443,
+              }
+            : true,
     },
     build: {
       rollupOptions: {

@@ -21,7 +21,6 @@ from services.guide_reminders import dispatch_guide_schedule_reminders
 logger = logging.getLogger(__name__)
 
 async def _ensure_schedule_guide_columns(conn) -> None:
-    """Колонки для INSERT в schedules — выполняем в первую очередь."""
     await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_confirmed_at TIMESTAMPTZ'))
     await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_rejected_at TIMESTAMPTZ'))
     await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_reject_reason TEXT'))

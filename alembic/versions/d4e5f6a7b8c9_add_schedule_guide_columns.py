@@ -1,8 +1,3 @@
-"""add guide workflow columns to schedules
-
-Revision ID: d4e5f6a7b8c9
-Revises: c0a1b2c3d4e5
-"""
 from typing import Sequence, Union
 
 from alembic import op

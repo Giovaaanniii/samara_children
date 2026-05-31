@@ -1,8 +1,3 @@
-"""remove booking_status draft via text cast (safe in one PG transaction)
-
-Revision ID: b12c3d4e5f60
-Revises: c7f1a2b3d4e5
-"""
 from typing import Sequence, Union
 
 from alembic import op
@@ -14,8 +9,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Нельзя в одной транзакции: ADD VALUE 'pending' и UPDATE status = 'pending'.
-    # Переводим колонку в text, меняем draft → pending, пересоздаём enum без draft.
     op.execute('ALTER TABLE bookings ALTER COLUMN status DROP DEFAULT')
     op.execute('ALTER TABLE bookings ALTER COLUMN status TYPE text USING status::text')
     op.execute("UPDATE bookings SET status = 'pending' WHERE status = 'draft'")

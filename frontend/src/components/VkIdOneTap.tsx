@@ -22,6 +22,14 @@ interface VkIdOneTapProps {
   redirectTo?: string;
 }
 
+function isBenignVkError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: number; text?: string };
+  if (e.code === 2 && e.text === "New tab has been closed") return true;
+  if (e.text?.toLowerCase().includes("tab has been closed")) return true;
+  return false;
+}
+
 function vkIdErrorMessage(error: unknown): string {
   if (error && typeof error === "object") {
     const e = error as {
@@ -32,7 +40,11 @@ function vkIdErrorMessage(error: unknown): string {
       message?: string;
     };
     if (e.code === 0 && e.text === "timeout") {
-      return "Виджет VK ID не загрузился. Проверьте интернет и настройки приложения VK ID.";
+      return (
+        "Виджет VK ID не загрузился. Проверьте блокировщик рекламы, " +
+        "настройки приложения VK ID (redirect https://samaradetyam.online/profile) " +
+        "и что сайт отдаётся production-сборкой, а не npm run dev."
+      );
     }
     return (
       e.text ||
@@ -115,8 +127,8 @@ export default function VkIdOneTap({ redirectTo = "/profile" }: VkIdOneTapProps)
     };
 
     const vkidOnError = (error: unknown) => {
-      if (destroyedRef.current) return;
-      console.error("VK ID:", error);
+      if (destroyedRef.current || isBenignVkError(error)) return;
+      console.warn("VK ID:", error);
       messageRef.current.error(vkIdErrorMessage(error));
     };
 
