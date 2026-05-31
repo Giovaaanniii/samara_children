@@ -1,5 +1,6 @@
 import * as VKID from "@vkid/sdk";
 import { App } from "antd";
+import type { MessageInstance } from "antd/es/message/interface";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +14,7 @@ const VK_APP_ID = Number(import.meta.env.VITE_VK_APP_ID || "54616810");
 declare global {
   interface Window {
     __vkIdConfigured?: boolean;
+    __vkIdOneTapHost?: HTMLDivElement | null;
   }
 }
 
@@ -43,6 +45,13 @@ function vkIdErrorMessage(error: unknown): string {
   return "Ошибка авторизации VK ID";
 }
 
+function clearVkHost(host: HTMLDivElement) {
+  host.replaceChildren();
+  if (window.__vkIdOneTapHost === host) {
+    window.__vkIdOneTapHost = null;
+  }
+}
+
 export default function VkIdOneTap({ redirectTo = "/profile" }: VkIdOneTapProps) {
   const { message } = App.useApp();
   const hostRef = useRef<HTMLDivElement>(null);
@@ -53,15 +62,23 @@ export default function VkIdOneTap({ redirectTo = "/profile" }: VkIdOneTapProps)
   const redirectRef = useRef(redirectTo);
   const loginWithTokenRef = useRef(loginWithToken);
   const navigateRef = useRef(navigate);
+  const messageRef = useRef<MessageInstance>(message);
   redirectRef.current = redirectTo;
   loginWithTokenRef.current = loginWithToken;
   navigateRef.current = navigate;
+  messageRef.current = message;
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
+    if (window.__vkIdOneTapHost === host && host.childElementCount > 0) {
+      return;
+    }
+
     destroyedRef.current = false;
+    clearVkHost(host);
+    window.__vkIdOneTapHost = host;
 
     const safeRedirect = redirectRef.current.startsWith("/")
       ? redirectRef.current
@@ -90,17 +107,17 @@ export default function VkIdOneTap({ redirectTo = "/profile" }: VkIdOneTapProps)
           access_token: data.access_token,
         });
         await loginWithTokenRef.current(tokens.access_token);
-        message.success("Вход через VK выполнен");
+        messageRef.current.success("Вход через VK выполнен");
         navigateRef.current(safeRedirect, { replace: true });
       } catch {
-        message.error("Не удалось завершить вход через VK");
+        messageRef.current.error("Не удалось завершить вход через VK");
       }
     };
 
     const vkidOnError = (error: unknown) => {
       if (destroyedRef.current) return;
       console.error("VK ID:", error);
-      message.error(vkIdErrorMessage(error));
+      messageRef.current.error(vkIdErrorMessage(error));
     };
 
     oneTap
@@ -120,8 +137,9 @@ export default function VkIdOneTap({ redirectTo = "/profile" }: VkIdOneTapProps)
 
     return () => {
       destroyedRef.current = true;
+      clearVkHost(host);
     };
-  }, [message]);
+  }, []);
 
   return (
     <div className={styles.host} ref={hostRef} aria-label="Вход через VK ID" />

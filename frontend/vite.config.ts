@@ -3,7 +3,8 @@ import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "..", "VITE_");
-  const hmrHost = env.VITE_HMR_HOST || "localhost";
+  const hmrHost = env.VITE_HMR_HOST?.trim() || "";
+  const hmrDisabled = env.VITE_HMR === "false";
 
   return {
     plugins: [react()],
@@ -21,11 +22,15 @@ export default defineConfig(({ mode }) => {
         "www.samaradetyam.online",
         "2.26.22.99",
       ],
-      hmr: {
-        host: hmrHost,
-        protocol: hmrHost === "localhost" ? "ws" : "wss",
-        clientPort: hmrHost === "localhost" ? 3000 : 443,
-      },
+      hmr: hmrDisabled
+        ? false
+        : hmrHost
+          ? {
+              host: hmrHost,
+              protocol: "wss",
+              clientPort: 443,
+            }
+          : true,
     },
     build: {
       rollupOptions: {

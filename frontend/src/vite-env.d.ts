@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_VK_APP_ID?: string;
   readonly VITE_VK_REDIRECT_URL?: string;
   readonly VITE_HMR_HOST?: string;
+  readonly VITE_HMR?: string;
 }
 
 interface ImportMeta {
