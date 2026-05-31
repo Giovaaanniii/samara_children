@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_CRYPTO_SECRET_KEY: string;
   readonly VITE_VK_APP_ID?: string;
   readonly VITE_VK_REDIRECT_URL?: string;
+  readonly VITE_HMR_HOST?: string;
 }
 
 interface ImportMeta {

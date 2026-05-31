@@ -1,5 +1,5 @@
 import { UpOutlined } from "@ant-design/icons";
-import { ConfigProvider, FloatButton, Spin, theme } from "antd";
+import { App as AntApp, ConfigProvider, FloatButton, Spin, theme } from "antd";
 import type { ThemeConfig } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -145,7 +145,9 @@ function AppRoutes() {
 function App() {
   return (
     <ConfigProvider locale={ruRU} theme={appTheme}>
-      <AppRoutes />
+      <AntApp>
+        <AppRoutes />
+      </AntApp>
     </ConfigProvider>
   );
 }
