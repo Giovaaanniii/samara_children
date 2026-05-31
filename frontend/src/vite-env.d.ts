@@ -12,8 +12,6 @@ interface ImportMetaEnv {
   readonly VITE_CRYPTO_SECRET_KEY: string;
   readonly VITE_VK_APP_ID?: string;
   readonly VITE_VK_REDIRECT_URL?: string;
-  /** Для dev через https://samaradetyam.online: VITE_HMR_HOST=samaradetyam.online */
-  readonly VITE_HMR_HOST?: string;
 }
 
 interface ImportMeta {
