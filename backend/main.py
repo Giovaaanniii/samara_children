@@ -20,9 +20,18 @@ from routers.reports import router as reports_router
 from services.guide_reminders import dispatch_guide_schedule_reminders
 logger = logging.getLogger(__name__)
 
+async def _ensure_schedule_guide_columns(conn) -> None:
+    """Колонки для INSERT в schedules — выполняем в первую очередь."""
+    await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_confirmed_at TIMESTAMPTZ'))
+    await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_rejected_at TIMESTAMPTZ'))
+    await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_reject_reason TEXT'))
+    await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_completed_at TIMESTAMPTZ'))
+    await conn.execute(text('\n                ALTER TABLE schedules\n                ADD COLUMN IF NOT EXISTS rejected_by_guide_id INTEGER\n                REFERENCES guides(id) ON DELETE SET NULL\n                '))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
+        await _ensure_schedule_guide_columns(conn)
         await conn.execute(text("\n                DO $$\n                BEGIN\n                    IF NOT EXISTS (\n                        SELECT 1\n                        FROM pg_enum e\n                        JOIN pg_type t ON t.oid = e.enumtypid\n                        WHERE t.typname = 'user_role' AND e.enumlabel = 'guide'\n                    ) THEN\n                        ALTER TYPE user_role ADD VALUE 'guide';\n                    END IF;\n                END\n                $$;\n                "))
         await conn.execute(text('ALTER TABLE reviews ADD COLUMN IF NOT EXISTS engagement_rating INTEGER'))
         await conn.execute(text('UPDATE reviews SET engagement_rating = rating WHERE engagement_rating IS NULL'))
@@ -35,11 +44,6 @@ async def lifespan(app: FastAPI):
         await conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS ix_users_vk_user_id ON users(vk_user_id) WHERE vk_user_id IS NOT NULL'))
         await conn.execute(text("\n                ALTER TABLE guides\n                ADD COLUMN IF NOT EXISTS availability_status VARCHAR(32) DEFAULT 'active'\n                "))
         await conn.execute(text("UPDATE guides SET availability_status = 'active' WHERE availability_status IS NULL"))
-        await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_confirmed_at TIMESTAMPTZ'))
-        await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_rejected_at TIMESTAMPTZ'))
-        await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_reject_reason TEXT'))
-        await conn.execute(text('ALTER TABLE schedules ADD COLUMN IF NOT EXISTS guide_completed_at TIMESTAMPTZ'))
-        await conn.execute(text('\n                ALTER TABLE schedules\n                ADD COLUMN IF NOT EXISTS rejected_by_guide_id INTEGER\n                REFERENCES guides(id) ON DELETE SET NULL\n                '))
         await conn.execute(text('\n                CREATE TABLE IF NOT EXISTS guide_salary_events (\n                    id SERIAL PRIMARY KEY,\n                    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,\n                    schedule_id INTEGER NOT NULL UNIQUE REFERENCES schedules(id) ON DELETE CASCADE,\n                    amount NUMERIC(12,2) NOT NULL DEFAULT 0,\n                    note TEXT NULL,\n                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n                )\n                '))
         await conn.execute(text('\n                CREATE TABLE IF NOT EXISTS guide_chat_messages (\n                    id SERIAL PRIMARY KEY,\n                    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,\n                    admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n                    sender_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n                    message TEXT NOT NULL,\n                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n                )\n                '))
         await conn.execute(text('\n                CREATE TABLE IF NOT EXISTS guide_schedule_reminders (\n                    id SERIAL PRIMARY KEY,\n                    schedule_id INTEGER NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,\n                    guide_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n                    reminder_type VARCHAR(16) NOT NULL,\n                    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n                    UNIQUE(schedule_id, guide_user_id, reminder_type)\n                )\n                '))
