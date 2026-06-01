@@ -81,6 +81,10 @@ export default function PaymentReturnPage() {
 
         if (snap.status === "pending") {
           setPollTimedOut(true);
+          if (!cancelled) {
+            setLoading(false);
+          }
+          return;
         }
 
         const { data } = await bookingsApi.getById(bookingId);
@@ -133,27 +137,27 @@ export default function PaymentReturnPage() {
     );
   }
 
-  if (!detail) {
+  if (!detail && !pollTimedOut) {
     return null;
   }
 
-  const ok = detail.status === "confirmed";
-  const pending = detail.status === "pending";
+  const ok = detail?.status === "confirmed";
+  const pending = pollTimedOut || detail?.status === "pending";
 
   return (
     <div style={{ padding: "32px 20px 56px", maxWidth: 560, margin: "0 auto" }}>
       <Card>
-        {pollTimedOut && pending ? (
+        {pollTimedOut && pending && !detail ? (
           <Alert
             style={{ marginBottom: 16 }}
             type="info"
             showIcon
             message="Подтверждение оплаты задерживается"
-            description="Статус обновится автоматически после обработки платежа в ЮKassa. Проверьте бронирование в личном кабинете чуть позже."
+            description="Если деньги списались, обновите страницу через минуту. Убедитесь, что в кабинете ЮKassa указан webhook: https://samaradetyam.online/api/v1/payment/webhook"
           />
         ) : null}
 
-        {ok ? (
+        {ok && detail ? (
           <>
             <Title level={3} style={{ marginTop: 0 }}>
               <CheckCircleOutlined style={{ color: "#52c41a", marginRight: 8 }} />
@@ -169,11 +173,11 @@ export default function PaymentReturnPage() {
               Оплата обрабатывается
             </Title>
             <Text type="secondary">
-              Бронирование №{detail.id} создано. Статус: ожидает подтверждения
+              Бронирование №{bookingId} создано. Статус: ожидает подтверждения
               оплаты — обновите страницу через минуту или проверьте почту.
             </Text>
           </>
-        ) : (
+        ) : detail ? (
           <>
             <Title level={3} style={{ marginTop: 0 }}>
               Статус бронирования
@@ -182,18 +186,20 @@ export default function PaymentReturnPage() {
               №{detail.id} — {detail.status}
             </Text>
           </>
-        )}
+        ) : null}
 
-        <div style={{ marginTop: 20 }}>
-          <Text strong>{detail.event.title}</Text>
-          <br />
-          <Text type="secondary">
-            {formatDateTime(detail.schedule.start_datetime)} —{" "}
-            {formatDateTime(detail.schedule.end_datetime)}
-          </Text>
-          <br />
-          <Text>Сумма: {detail.total_price} ₽</Text>
-        </div>
+        {detail ? (
+          <div style={{ marginTop: 20 }}>
+            <Text strong>{detail.event.title}</Text>
+            <br />
+            <Text type="secondary">
+              {formatDateTime(detail.schedule.start_datetime)} —{" "}
+              {formatDateTime(detail.schedule.end_datetime)}
+            </Text>
+            <br />
+            <Text>Сумма: {detail.total_price} ₽</Text>
+          </div>
+        ) : null}
 
         <div style={{ marginTop: 24 }}>
           <Link to="/profile">Личный кабинет</Link>

@@ -11,10 +11,10 @@ from auth import get_current_admin, get_current_user
 from booking_period import aware_utc, booking_created_at_window
 from config import settings
 from database import get_db
-from models import Booking, BookingStatus, Event, Participant, Schedule, ScheduleStatus, Transaction, TransactionStatus, User, UserRole
+from models import Booking, BookingStatus, Event, Participant, PaymentMethod, Schedule, ScheduleStatus, Transaction, TransactionStatus, User, UserRole
 from schemas import BookingAdminStatusUpdate, BookingCancelResponse, BookingCreate, BookingDetailResponse, BookingResponse, BookingStatusSnapshotResponse, EventBookingInfoResponse, ParticipantResponse, ScheduleBriefResponse
 from services.booking_lock import ensure_slots_mirror, release_reservation, reserve_slots_and_lock, restore_slots_after_paid_cancel
-from services.payment_service import create_payment, create_refund
+from services.payment_service import create_payment, create_refund, sync_booking_payment_if_pending
 from services.redis_client import RedisDep
 router = APIRouter(prefix='/bookings', tags=['Бронирования'])
 
@@ -82,6 +82,17 @@ async def create_booking(data: BookingCreate, db: Annotated[AsyncSession, Depend
         await release_reservation(redis, schedule.id, current_user.id, data.participants_count)
         raise
     payment_url, payment_id = await create_payment(booking_id=booking.id, amount=booking.total_price, description=f'Бронирование #{booking.id}, мероприятие: {event.title}', return_url=_payment_return_url_with_booking(booking.id))
+    if payment_id and not payment_id.startswith('demo-'):
+        db.add(
+            Transaction(
+                booking_id=booking.id,
+                payment_method=PaymentMethod.card_online,
+                amount=booking.total_price,
+                status=TransactionStatus.pending,
+                external_id=payment_id,
+            )
+        )
+        await db.commit()
     return _booking_to_response(booking, payment_url=payment_url, payment_id=payment_id)
 
 @router.get('/my', response_model=list[BookingResponse], summary='Мои бронирования', description='Возвращает список бронирований текущего пользователя с возможностью фильтрации по статусу.')
@@ -128,13 +139,16 @@ async def list_all_bookings_admin(db: Annotated[AsyncSession, Depends(get_db)], 
     return out
 
 @router.get('/{booking_id}/status', response_model=BookingStatusSnapshotResponse, summary='Статус бронирования', description='Лёгкий эндпоинт для опроса статуса бронирования после возврата с оплаты.')
-async def get_booking_status(booking_id: int, db: Annotated[AsyncSession, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]) -> BookingStatusSnapshotResponse:
+async def get_booking_status(booking_id: int, db: Annotated[AsyncSession, Depends(get_db)], redis: RedisDep, current_user: Annotated[User, Depends(get_current_user)]) -> BookingStatusSnapshotResponse:
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
     booking = result.scalar_one_or_none()
     if booking is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Бронирование не найдено')
     if not _can_access_booking(current_user, booking):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Нет доступа к этому бронированию')
+    if booking.status == BookingStatus.pending:
+        await sync_booking_payment_if_pending(db, redis, booking)
+        await db.refresh(booking)
     return BookingStatusSnapshotResponse(id=booking.id, status=booking.status, confirmed_at=booking.confirmed_at)
 
 @router.get('/{booking_id}', response_model=BookingDetailResponse, summary='Детали бронирования', description='Возвращает полные данные бронирования, включая участников, мероприятие и сеанс.')

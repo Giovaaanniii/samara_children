@@ -31,6 +31,10 @@ def _create_yookassa_payment_sync(booking_id: int, amount: Decimal, description:
         raise RuntimeError('YooKassa: нет confirmation_url или id в ответе')
     return (url, pid)
 
+def _fetch_yookassa_payment_sync(payment_id: str):
+    from yookassa import Payment
+    return Payment.find_one(payment_id)
+
 async def create_payment(booking_id: int, amount: Decimal, description: str, return_url: str) -> tuple[str, str]:
     if _configure_yookassa():
         return await asyncio.to_thread(_create_yookassa_payment_sync, booking_id, amount, description, return_url)
@@ -50,6 +54,122 @@ async def create_refund(payment_id: str, amount: Decimal) -> str:
     if not _configure_yookassa():
         raise ValueError('YooKassa не настроена')
     return await asyncio.to_thread(_create_refund_sync, payment_id, amount)
+
+async def _confirm_booking_paid(
+    db: AsyncSession,
+    redis_client: RedisClient,
+    *,
+    booking_id: int,
+    payment_id: str,
+    paid_amount: Decimal | None,
+) -> bool:
+    existing = await db.execute(select(Transaction).where(Transaction.external_id == payment_id))
+    existing_tx = existing.scalar_one_or_none()
+    if existing_tx is not None and existing_tx.status == TransactionStatus.completed:
+        logger.info('Платёж %s уже обработан', payment_id)
+        return False
+    booking = await db.get(Booking, booking_id)
+    if booking is None:
+        logger.error('Бронирование %s не найдено', booking_id)
+        return False
+    if booking.status != BookingStatus.pending:
+        logger.info('Бронирование %s уже не pending (%s)', booking_id, booking.status)
+        return False
+    schedule = await db.get(Schedule, booking.schedule_id)
+    if schedule is None:
+        logger.error('Сеанс для бронирования %s не найден', booking_id)
+        return False
+    event = await db.get(Event, schedule.event_id)
+    event_title = event.title if event else 'Мероприятие'
+    if paid_amount is not None and paid_amount != booking.total_price.quantize(Decimal('0.01')):
+        logger.warning(
+            'Сумма не совпадает booking=%s paid=%s expected=%s',
+            booking_id,
+            paid_amount,
+            booking.total_price,
+        )
+    user = await db.get(User, booking.user_id)
+    if user is None:
+        logger.error('Пользователь для бронирования %s не найден', booking_id)
+        return False
+    new_slots = schedule.available_slots - booking.participants_count
+    if new_slots < 0:
+        logger.error('Недостаточно мест в БД для schedule %s', schedule.id)
+        return False
+    now = datetime.now(timezone.utc)
+    schedule.available_slots = new_slots
+    booking.status = BookingStatus.confirmed
+    booking.confirmed_at = now
+    if existing_tx is not None:
+        existing_tx.status = TransactionStatus.completed
+        existing_tx.completed_at = now
+    else:
+        db.add(
+            Transaction(
+                booking_id=booking.id,
+                payment_method=PaymentMethod.card_online,
+                amount=booking.total_price,
+                status=TransactionStatus.completed,
+                external_id=payment_id,
+                completed_at=now,
+            )
+        )
+    await db.commit()
+    await clear_booking_lock_only(redis_client, schedule.id, booking.user_id)
+    try:
+        if user.email:
+            await send_booking_confirmation_email(
+                user.email,
+                booking.id,
+                event_title=event_title,
+                start_at=schedule.start_datetime,
+                participants_count=booking.participants_count,
+            )
+    except Exception:
+        logger.exception('Уведомления после оплаты бронирования %s не отправлены', booking_id)
+    logger.info('Бронирование %s подтверждено, платёж %s', booking_id, payment_id)
+    return True
+
+async def sync_booking_payment_if_pending(
+    db: AsyncSession,
+    redis_client: RedisClient,
+    booking: Booking,
+) -> bool:
+    if booking.status != BookingStatus.pending:
+        return False
+    if not _configure_yookassa():
+        return False
+    result = await db.execute(
+        select(Transaction)
+        .where(
+            Transaction.booking_id == booking.id,
+            Transaction.status == TransactionStatus.pending,
+            Transaction.external_id.isnot(None),
+        )
+        .order_by(Transaction.id.desc())
+        .limit(1)
+    )
+    tx = result.scalar_one_or_none()
+    if tx is None or not tx.external_id or tx.external_id.startswith('demo-'):
+        return False
+    try:
+        payment = await asyncio.to_thread(_fetch_yookassa_payment_sync, tx.external_id)
+    except Exception:
+        logger.exception('Не удалось запросить платёж %s в ЮKassa', tx.external_id)
+        return False
+    status = getattr(payment, 'status', None)
+    if status != 'succeeded':
+        logger.info('Синхронизация: платёж %s в статусе %s', tx.external_id, status)
+        return False
+    paid_raw = getattr(getattr(payment, 'amount', None), 'value', None)
+    paid = Decimal(str(paid_raw)) if paid_raw is not None else None
+    return await _confirm_booking_paid(
+        db,
+        redis_client,
+        booking_id=booking.id,
+        payment_id=tx.external_id,
+        paid_amount=paid,
+    )
 
 async def handle_webhook(request: Request, db: AsyncSession, redis_client: RedisClient) -> dict[str, Any]:
     try:
@@ -72,46 +192,18 @@ async def handle_webhook(request: Request, db: AsyncSession, redis_client: Redis
         booking_id = int(booking_id_raw)
     except (TypeError, ValueError):
         return {'ok': False, 'error': 'invalid_booking_id'}
-    existing = await db.execute(select(Transaction.id).where(Transaction.external_id == payment_id))
-    if existing.scalar_one_or_none() is not None:
-        logger.info('Webhook: платёж %s уже обработан', payment_id)
-        return {'ok': True, 'duplicate': True}
-    booking = await db.get(Booking, booking_id)
-    if booking is None:
-        logger.error('Webhook: бронирование %s не найдено', booking_id)
-        return {'ok': False, 'error': 'booking_not_found'}
-    if booking.status != BookingStatus.pending:
-        logger.info('Webhook: бронирование %s уже не pending (%s)', booking_id, booking.status)
-        return {'ok': True, 'already_processed': True}
-    schedule = await db.get(Schedule, booking.schedule_id)
-    if schedule is None:
-        return {'ok': False, 'error': 'schedule_not_found'}
-    event = await db.get(Event, schedule.event_id)
-    event_title = event.title if event else 'Мероприятие'
     amount_str = (obj.get('amount') or {}).get('value')
-    if amount_str is not None:
-        paid = Decimal(str(amount_str))
-        if paid != booking.total_price.quantize(Decimal('0.01')):
-            logger.warning('Webhook: сумма не совпадает booking=%s paid=%s expected=%s', booking_id, paid, booking.total_price)
-    user = await db.get(User, booking.user_id)
-    if user is None:
-        return {'ok': False, 'error': 'user_not_found'}
-    new_slots = schedule.available_slots - booking.participants_count
-    if new_slots < 0:
-        logger.error('Webhook: недостаточно мест в БД для schedule %s', schedule.id)
-        return {'ok': False, 'error': 'slots_underflow'}
-    now = datetime.now(timezone.utc)
-    schedule.available_slots = new_slots
-    booking.status = BookingStatus.confirmed
-    booking.confirmed_at = now
-    tx = Transaction(booking_id=booking.id, payment_method=PaymentMethod.card_online, amount=booking.total_price, status=TransactionStatus.completed, external_id=payment_id, completed_at=now)
-    db.add(tx)
-    await db.commit()
-    await clear_booking_lock_only(redis_client, schedule.id, booking.user_id)
-    try:
-        if user.email:
-            await send_booking_confirmation_email(user.email, booking.id, event_title=event_title, start_at=schedule.start_datetime, participants_count=booking.participants_count)
-    except Exception:
-        logger.exception('Webhook: уведомления после оплаты бронирования %s не отправлены', booking_id)
-    logger.info('Webhook: бронирование %s подтверждено, платёж %s', booking_id, payment_id)
+    paid = Decimal(str(amount_str)) if amount_str is not None else None
+    confirmed = await _confirm_booking_paid(
+        db,
+        redis_client,
+        booking_id=booking_id,
+        payment_id=payment_id,
+        paid_amount=paid,
+    )
+    if not confirmed:
+        booking = await db.get(Booking, booking_id)
+        if booking is not None and booking.status != BookingStatus.pending:
+            return {'ok': True, 'already_processed': True}
+        return {'ok': True, 'duplicate': True}
     return {'ok': True, 'booking_id': booking_id}
